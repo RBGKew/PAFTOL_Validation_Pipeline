@@ -20,8 +20,8 @@ except:
 
 input_file = sys.argv[1]
 name = input_file.split('.')[0]
-output_fasta = (name + '_raw.fasta').replace('gb_files','tmp')
-output_table = (name + '_raw_SeqID.csv').replace('gb_files','tmp')
+output_fasta = sys.argv[2]
+output_table = sys.argv[3]
 
 print('input .gb is',input_file)
 print('output .fasta is ',output_fasta)
