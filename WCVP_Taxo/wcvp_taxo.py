@@ -1,42 +1,39 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# 
 # # wcvp_taxo
 # wcvp_taxo is a python3 script for matching and resolving scientific names against the WCVP database (https://wcvp.science.kew.org/)
 # 
 # ## Input
 # ### A. Input files
 # The script requires two input tables: The WCVP database and a file with species names to match on WCVP
-# 1. **WCVP database**: must be downloaded from http://sftp.kew.org/pub/data-repositories/WCVP/. It will be filtered and save by the script in pickle format. If you whish to update the WCVP database, deleted the .pkl file.
-# 2. **Sample file**: This spreadsheet must be in **.csv** format and contain at least one column with the scientific names you wish to match in WCVP. By default the script will look for a column named **scientific_name**. Otherwise it will look for a column called **Species**. If the species name is spread in two columns **(Genus, Species)**, the script with recognize it automatically.
+# 1. **WCVP database**: must be downloaded from http://sftp.kew.org/pub/data-repositories/WCVP/. It will be filtered and save by the script in pickle format. If you whish to update the WCVP database, delete the .pkl file.
+# 2. **Sample file**: This spreadsheet must be in **.csv** format and contain at least one column with the scientific names you wish to match in WCVP. By default the script will look for a column named **scientific_name** or **sci_name**. Otherwise it will look for a column called **Species**. If the species name is spread in two columns **(Genus, Species)**, the script with recognize it as well.
 # 
 # ### B. Parameters
 # These parameters are optional and can be accessed with python wcvp_taxo.py -h
-# - **-g, --resolve_genus**: Find taxa for scientific names written in genus sp. format
-# - **-s, --similar_tax_method**: Find most similar taxa for misspelled taxa. <br>
-# Possibles values are: 
-# 	- **similarity_genus**: Search for similar scientific name in WCVP assuming genus is correct (fast)
-# 	- **similarity**: Search for similar scientific name in WCVP (slow)
-# 	- **request_kewmatch**: Search for similar scientific name using kewmatch (online) (ok if less than <200 queries)
-# - **-d, --duplicate_action**. Action to take when multiple wcvp entries match the provided scientific_name. <br>
-# Possibles values are: 
-# 	- **rank**: reduce duplicates by prioritizing accepted > unplaced > synonym > homotypic_synonym  taxonomic status (keep first entry). 
-# 	- **divert**: divert duplicates to _duplicates.csv
-# 	- **divert_taxonOK**: divert duplicates to _duplicates.csv, unless all matching entries have the same taxon name in WCVP (keep first entry)
-# 	- **divert_speciesOK**: divert duplicates to _duplicates.csv, unless all matching entries have the same species name in WCVP (keep first entry)
-# 	- **divert_genusOK**: divert duplicates to _duplicates.csv, unless all matching entries have the same genus name in WCVP (keep first entry and rename as genus sp.)
-# - **-oc, --only_changes**: Output file only contains IDs that have a different taxonomy than provided (species, genus or family if provided)
-# - **-os, --simple_output**: Output file is simplified to 4 columns: ID, kew-id, Ini_sci_name, sci_name
+# - **-oc, --only_changes**: Output file only contains IDs for which the WCVP taxonomy is different than provided (species, genus or family if provided)
+# - **-os, --simple_output**: Output file is simplified to a list of columns provided by the user (e.g. `DataSource Project`) + the following 5 columns: `ID, kew-id, Ini_sci_name, sci_name, Duplicate_type`
+# - **-g, --resolve_genus**: Find taxa for scientific names written in `genus sp`. format
 # - **-v, --verbose**: verbose output in console
-# 
+# - **-s, --similar_tax_search**: Find most similar taxa for misspelled taxa. <br>
+#     Options are: 
+# 	- **similarity**: Search for similar scientific name in WCVP (slow)
+#     - **similarity_genus**: Search for similar scientific name in WCVP assuming genus is correct (fast)
+# 	- **request_kewmatch**: Search for similar scientific name using kewmatch (online) (do not use if you have a lot of queries)
+# - **-d, --duplicate_action**. Action to take when multiple wcvp entries exist for the provided scientific_name. <br>
+#     Options are: 
+# 	- **rank**: (Default) reduce duplicates by prioritizing accepted > unplaced > synonym > homotypic_synonym  taxonomic status (keep first entry). 
+# 	- **divert**: divert duplicates to `_duplicates.csv`
+# 	- **divert_taxonOK**: divert duplicates to `_duplicates.csv`, unless all matching entries have the same taxon name in WCVP (keep first entry)
+# 	- **divert_speciesOK**: divert duplicates to `_duplicates.csv`, unless all matching entries have the same species name in WCVP (keep first entry)
+# 	- **divert_genusOK**: divert duplicates to `_duplicates.csv`, unless all matching entries have the same genus name in WCVP (keep first entry and rename as genus sp.)
 # 
 # ## Example
 # ```console
-# python wcvp_taxo.py wcvp_export.txt sample_file.csv -g -s similarity_genus -d divert_taxonOK
 # python wcvp_taxo.py wcvp_export.txt sample_file.csv
-# python wcvp_taxo.py wcvp_export.txt sample_file.csv -oc -os -s similarity --verbose -d divert
-# python wcvp_taxo.py wcvp_export.txt sample_file.csv -g -s similarity -d rank --verbose
+# python wcvp_taxo.py wcvp_export.txt sample_file.csv -g -s similarity_genus -d divert
+# python wcvp_taxo.py wcvp_export.txt sample_file.csv --only_changes -s similarity -os ['ExternalSequenceID', 'DataSource', ''Ini_Genus','Ini_Species'] -s similarity -d rank
 # ```
 # 
 # ## Output
@@ -53,10 +50,10 @@
 # * Search for column with unique IDs. First column in table will be selected. Creates column with unique IDs if it doesn't exist. Will not pick sci_name or Species as ID.
 # 
 # ### Initial checks
-# * Check if Ini_scinames are written as Genus sp.
-# * Check if Ini_scinames exist in WCVP
+# * Check if Ini_Sci_name are written as Genus sp.
+# * Check if Ini_Sci_name exist in WCVP
 # * Optional. Find similar names if not in WCVP
-# * Check if Ini_scinames have duplicate entries
+# * Check if Ini_Sci_name have duplicate entries
 # * Proceed to matching for valid scientific names
 # 
 # ### Matching & Resolving
@@ -70,7 +67,7 @@
 # for similarity: difflib, requests, ast<br>
 # numpy, os, argparse, sys
 
-# In[1]:
+# In[17]:
 
 
 import pandas as pd
@@ -84,7 +81,7 @@ import sys
 
 # ## Parameters
 
-# In[2]:
+# In[18]:
 
 
 parser = argparse.ArgumentParser(
@@ -98,15 +95,6 @@ parser.add_argument("df_path", type=str,
 parser.add_argument("-g", "--resolve_genus", 
                     help="Optional. find taxa for scientific names written in genus sp. format", 
                     action="store_true", default=False)
-parser.add_argument("-s",'--similar_tax_method', 
-        help="Optional. Find most similar taxa for misspelled taxa. possibles values are: \
-        similarity_genus, similarity, request_kew", action="store", default=None)
-parser.add_argument("-d",'--duplicate_action', 
-        help="Optional. Action to take when multiple wcvp taxon match to a sci_name. possibles values are: \
-        rank, divert, divert_taxonOK, divert_speciesOK, divert_genusOK.\
-        \n\n rank: reduce duplicates by prioritizing accepted > unplaced > synonym > homotypic synonym \
-        taxonomic status. \n\n divert: flag duplicates, remove them from _wcvp.csv output and write them to _duplicates.csv", 
-                    action="store", default='rank')
 parser.add_argument("-oc", "--only_changes", 
                     help="Optional. Output file only contains IDs that have a different taxonomy than provided", 
                     action="store_true", default=False)
@@ -116,18 +104,29 @@ parser.add_argument("-od", "--output_duplicates",
 parser.add_argument("-os", "--simple_output", 
                     help="Optional. Specify which columns of the input file should be kept, in addition to ID, species name \
                     and WCVP columns kew-id and species name. \
-                    e.g. --simple_output ['idSequencing','NumReads'] will produce an output with \
+                    e.g. --simple_output idSequencing NumReads will produce an output with \
                     idSequencing,NumReads, kew-id, Ini_sci_name, sci_name", 
                     action="store_true", default=False)
 parser.add_argument("-v", "--verbose", 
                     help="Optional. verbose output in console", 
                     action="store_true", default=False)
+parser.add_argument("-s",'--similar_tax_search', 
+        help="Optional. Find most similar taxa for misspelled taxa. possibles values are: \
+        similarity, similarity_genus, request_kew", action="store", default=None)
+parser.add_argument("-d",'--duplicate_action', 
+        help="Optional. Action to take when multiple wcvp taxon match to a sci_name. possibles values are: \
+        rank, divert, divert_taxonOK, divert_speciesOK, divert_genusOK.\
+        \n\n rank: reduce duplicates by prioritizing accepted > unplaced > synonym > homotypic synonym \
+        taxonomic status. \n\n divert: flag duplicates, remove them from _wcvp.csv output and write them to _duplicates.csv", 
+                    action="store", default='rank')
+
+
 args = parser.parse_args()
 
 wcvp_path = args.wcvp_path
 df_path = args.df_path
 resolve_genus=args.resolve_genus
-find_most_similar=args.similar_tax_method
+find_most_similar=args.similar_tax_search
 dupl_action=args.duplicate_action
 only_changes=args.only_changes
 simple_output=args.simple_output
@@ -136,19 +135,21 @@ verbose=args.verbose
 status_keep=['Accepted','Unplaced']
 
 
-# In[3]:
+# In[19]:
 
 
 # ## Jupyter Notebook 
 # wcvp_path='wcvp_v4_mar_2021.txt'
-# df_path='../PAFTOL_DB/2021-03-19_paftol_export.csv'
+# # df_path='../PAFTOL_DB/2021-06-09_paftol_export.csv'
+# df_path='sample_file.csv'
 # resolve_genus=True
 # find_most_similar='similarity'
 # dupl_action='rank'
-# verbose=False
+# verbose=True
 # only_changes=True
 # # simple_output=False
-# simple_output=['idPaftol','idSequencing','ExternalSequenceID','DataSource','Project','Taxonomical_Notes']
+# simple_output=['idPaftol','idSequencing','ExternalSequenceID','DataSource','Project','Ini_Genus','Ini_Species',
+#                'Taxonomical_Notes','species','genus']
 # status_keep=['Accepted','Unplaced']
 
 
@@ -156,7 +157,7 @@ status_keep=['Accepted','Unplaced']
 
 # ### Data processing functions
 
-# In[4]:
+# In[20]:
 
 
 # Load wcvp file and save as pickle for faster loading
@@ -187,11 +188,16 @@ def load_df(df_path):
         print(smpl_df.shape[0],'entries')
         return smpl_df
     except:
-        print('could not find',df_path)
-        sys.exit()
+        try:
+            smpl_df = pd.read_csv(df_path)
+            print(smpl_df.shape[0],'entries. Caution: Dataframe is not utf-8')
+            return smpl_df
+        except:
+            print('could not find',df_path)
+            sys.exit()
 
 
-# In[5]:
+# In[21]:
 
 
 #Define ID column
@@ -212,7 +218,7 @@ def GetIDcol(df):
     return colID
 
 
-# In[6]:
+# In[22]:
 
 
 #Find which column contains the scientific name to match
@@ -250,7 +256,7 @@ def define_sci_name(smpl_df, verbose=False):
 
 # ### WCVP related functions
 
-# In[7]:
+# In[23]:
 
 
 def get_by_taxon_name(df, wcvp):
@@ -259,7 +265,7 @@ def get_by_taxon_name(df, wcvp):
     return match
 
 
-# In[8]:
+# In[24]:
 
 
 def get_by_kew_id(df, wcvp):
@@ -268,7 +274,7 @@ def get_by_kew_id(df, wcvp):
     return match
 
 
-# In[9]:
+# In[25]:
 
 
 #Find closely matching scientific name using difflib.get_close_matches if scientific name was not found
@@ -297,7 +303,7 @@ def find_sim(sci_name, wcvp, only_from_genus=True):
 # print(find_sim('Scaveola humilis', wcvp, only_from_genus=False))
 
 
-# In[10]:
+# In[26]:
 
 
 #Find closely matching scientific name using kew namematching system
@@ -327,7 +333,7 @@ def kew_namematch(sci_name, verbose=False):
 # print(kew_namematch('Combretum mussaendiflora',verbose=True))
 
 
-# In[11]:
+# In[27]:
 
 
 #Find closely matching scientific name
@@ -353,7 +359,7 @@ def get_sim(df, wcvp, find_most_similar, verbose=False):
     return df
 
 
-# In[12]:
+# In[28]:
 
 
 def get_duplicates_type(df):
@@ -375,9 +381,24 @@ def get_duplicates_type(df):
     return df
 
 
+# In[29]:
+
+
+# Simple output
+def output_fn(out_df,simple_output,colID):
+    if simple_output==False:
+        out_df = out_df.drop(columns='ID')
+    elif sum([icol in out_df.columns for icol in simple_output])==len(simple_output):
+        simple_output.extend([colID,'kew_id','Ini_sci_name','sci_name','Duplicate_type'])
+        out_df = out_df[simple_output]
+    else:
+        print('error in simple_output',simple_output,', returning full dataframe')
+    return out_df
+
+
 # ## Main
 
-# In[13]:
+# In[30]:
 
 
 if __name__ == "__main__":
@@ -531,16 +552,7 @@ if __name__ == "__main__":
     
     
     ## Output options
-    # Simple output
-    def output_fn(out_df,simple_output,colID):
-        if simple_output==False:
-            out_df = out_df.drop(columns='ID')
-        elif sum([icol in out_df.columns for icol in simple_output])==len(simple_output):
-            simple_output.extend([colID,'kew_id','Ini_sci_name','sci_name','Duplicate_type'])
-            out_df = out_df[simple_output]
-        else:
-            print('error in simple_output',simple_output,', returning full dataframe')
-        return out_df
+
     
     # Output All
     if only_changes==False:
@@ -553,7 +565,8 @@ if __name__ == "__main__":
             out_df['Same_family']=(out_df.Ini_Family==out_df.family)
             print('Family match:',out_df.groupby('Same_family').size().to_dict())
             out_df = out_df[(out_df.Same_family==False) | (out_df.Same_sci_name==False)]                    .drop(columns=['Same_sci_name'])
-            simple_output.extend(['Same_family','Ini_Family','family'])
+            if simple_output!=False:
+                simple_output.extend(['Same_family','Ini_Family','family'])
         else:
             out_df = out_df[(out_df.Same_sci_name==False)].drop(columns='Same_sci_name')
             
@@ -564,4 +577,10 @@ if __name__ == "__main__":
         out_df.to_csv(df_path.replace('.csv','_wcvp_changes.csv'),index=False,encoding='utf-8')
         
     print('Done!')
+
+
+# In[31]:
+
+
+out_df.sci_name
 
