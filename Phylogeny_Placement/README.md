@@ -17,7 +17,12 @@ The program has two main tasks: First: to identify the nodes corresponding to hi
 Note that for families represented in the tree by a single sample, the validation was performed with respect to their orders. If the order was represented by a single sample, the sample was considered untestable and coded as inconclusive.
 
 ## Usage
+**Dependencies:**
 
+Dependencies can be installed with the following command:
+```shell
+cpanm Bio::TreeIO Data::Dumper Getopt::Long
+```
 **Inputs:**
 
 * opt_tree 		Input tree (required)
@@ -25,7 +30,7 @@ Note that for families represented in the tree by a single sample, the validatio
 * opt_root 		is the node ID of the true root. Need to find this manually based on content of tree 
 
 ```perl
-perl pp.pl -tree treefile.nwk [-dup.dup.txt] -good g.txt -alien a.txt -outlier o.txt -specimen s.txt -tree2 new_treefile.nwk [-root 100000] [-order] [-well] [-help] > output.txt
+perl pp.pl -tree treefile.nwk [-dup.dup.txt] -good g.txt -bad b.txt -alien a.txt -outlier o.txt -mono mono.txt -specimen s.txt -tree2 new_treefile.nwk [-root 100000] [-order] [-well] [-help] > output.txt
 ```
 
 
