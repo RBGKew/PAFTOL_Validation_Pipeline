@@ -84,7 +84,7 @@ Using [WCVP_taxo](../WCVP_Taxo/), the taxonomy of accessions was resolved agains
 python wcvp_taxo.py wcvp_export.txt tmp/"$barcode_db"_raw_SeqID_update.csv -g -d divert_genusOK
 wc -l tmp/"$barcode_db"_raw_SeqID_update_wcvp.csv
 cp tmp/"$barcode_db"_raw_SeqID_update_wcvp.csv "$barcode_db"_TAXO.csv
-awk -F"," '{print $1}' "$barcode_db"_TAXO.csv > tmp/"$barcode_db"_seqID.txt
+awk -F"," '{print $1}' "$barcode_db"_TAXO.csv > tmp/"$barcode_db"_seqID.txt #$1 refers to the first column corresponding to SeqID. Use another column number if SeqID is not first column
 wc -l tmp/"$barcode_db"_seqID.txt
 seqtk subseq tmp/"$barcode_db"_trim.fasta tmp/"$barcode_db"_seqID.txt > "$barcode_db".fasta
 
