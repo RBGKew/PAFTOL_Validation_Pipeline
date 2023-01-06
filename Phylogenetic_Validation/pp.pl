@@ -1,11 +1,5 @@
 #!/bin/perl
 
-##################################
-# Author: Paul Kersey
-
-# Copyright © 2020 The Board of Trustees of the Royal Botanic Gardens, Kew
-##################################
-
 # analyse PAFTOL tree and label nodes
 
 # some of the outputs generated include:
@@ -81,7 +75,7 @@ my $USAGE =<<USAGE;
             specimen=s  List of score for how well each specimen matches to its family
                stats=s  List of taxonomic coherence scores for labelled nodes and associated bootstrap values
            bootstrap=s  List of bootstrap values by position in taxonomy
-                mono=s  Specify this to run an abbreviated version of code to produce monophyly report only
+                mono=s  Monophyly report
                tree2=s  File to which a simplified (rooted) family-level tree will be written
                  order  Specify this to write a simplified order-level tree instead of a family level tree
                   well  Specify this and specimens will only be considered outliers to well-defined parents
@@ -90,6 +84,69 @@ my $USAGE =<<USAGE;
 USAGE
 #
 ######################################################
+#
+# Primary outpout file is specified with the -o flag.
+#
+# Each row represents one taxon that whose placement in the tree is wrong or uncertain
+# compared to one or more ancestral taxa.  A specimen is treated as the lowest taxonomic
+# rank, i.e., taxonomic hierarchy is order, family, genus, species, specimen
+#
+# The report identifies all irregularities across the hierarchy, but for then purpose of
+# review we focus on specimen - family irregularities
+# 
+#
+# First character:
+# -: if this row does not describe an incongruity concerning the familiar placement of a
+#    specimen.  Can be ignored for the purpose of review.
+# C: specimen is sole family member (can't verify family placement) but is in correct 
+#    order - no need to review (Confirmed).
+# U: specimen is sole member of order (can't verify placement) or family is low scoring -
+#    should review (Unconfirmed - needs review).
+# R: familiar problem unrelated to singularity or low score (Reject).
+#
+# Next: O and/or S
+# O: this row describes a taxon that is an outlier compared to one or more ancestral taxa
+#    or one or more ancestral taxa are poorly resolved.
+# S: this row describes a taxon that is the only representative of its family or order
+#    all rows that begin with C will have this status.
+# both flags can be applicable because the row describes how a taxon compares with all
+# it's ancestral taxa.
+# 
+# Rank of problematic taxon.
+#
+# Name of problematic taxon.
+#
+# If taxon is poorly resolved, this is indicated by a trailing '!'
+# 	"poorly resolved" taxa are defined by comparing two hierarchies: the taxonomic 
+#   hierarchy and the hierarchy of nodes in the tree.
+#   first, every taxon is compared with every node and a score is calculated as follows:
+#   score = % of specimens that are descendents of the examined taxon whose corresponding
+#   leaf nodes are descendents of the examined node x % of leaf nodes that are descendents
+#   of the examined node whose corresponding specimens are descendents of the examined 
+#   taxon.
+#   the highest scoring node is then considered to represent the taxon in the tree
+#   if two nodes score equally wrt a taxon, one is chosen to represent the taxon at
+#   random.
+#   a taxon is considered poorly resolved if the node representing this taxon has a poor
+#   score (<50%), or there are >1 equally well-scoring nodes that could represent it.
+#
+# For each ancestral taxon which is problematic wrt this taxon, in parentheses:
+#
+# Name of ancestral taxon.
+#
+# If the ancestral taxon is a singleton, this is indicated by a trailing '1'.
+#
+# If the ancestral taxon is poorly resolved, this is indicated by a trailing '!'.
+#
+# If the higher level taxon is well resolved, this is indicated by a trailing '*'.
+#   "well resolved": > 90% of specimens that are descendents of the examined taxon
+#   correspond to leaf nodes are descendents of the node best representing the taxon.
+#   it is possible that a taxon is simultaneously well and poorly resolved according to
+#   this terminology - e.g., the representative node for a taxon could be ancestral
+#   to most of the leaf nodes corresponding to specimens descending from the taxon, but 
+#   many of the leaf nodes under the representative node could correspond to specimens not 
+#   descending from the taxon.
+##
 
 if ($opt_help) {
 
@@ -159,15 +216,20 @@ if (my $tree = $treeio->next_tree) {
  	LEAF: for my $leaf (@leaves) {
   	
   		my $description = $leaf->id;
+  		my (@fields) = split '_', $description;
+  		my $order = $fields[0];
+  		my $family = $fields[1];
+  		my $genus = $fields[2];
+  		my $species = $fields[3]; 
+  		my $leafId = $fields[5]; # changing from 4 for bigtree paper
+  		my $blacklist; # not currently in use	
   		
-  		# $description =~ s/_sp\./ sp/g; # can't use field seperator within fields
-  		
-  		my ($order, $family, $genus, $species, $leafId, $blacklist) = 
-  			split '_', $description;
+  		# my ($order, $family, $genus, $species, $leafId, $blacklist) = 
+  		#	split '_', $description;
   		
   		if (($species eq '') || ($order eq 'unknown')) {
   		
-			die if $order eq 'unknwown'; # should have fixed all these problems in latest tree
+			die if $order eq 'unknwown'; # should have fixed all these problems
 		}
 		
 		if ($barred{$leafId}) {
@@ -200,8 +262,6 @@ if (my $tree = $treeio->next_tree) {
   		
   			$specimen .= 'X';
   		}
-  		
-  		print STDERR $leafId, "*", $specimen if $specimen =~ /Pedicellarum /;
   		
   		# $specimen .= $blacklist;
   		
@@ -247,21 +307,33 @@ if (my $tree = $treeio->next_tree) {
   			}
   		}
   		
+  	
+  		if ($leafId eq '') {
+  		
+  			print STDERR $description, "\n";
+  			die;
+  		}
+  		
   		if ($opt_mono) {
   		
   			# code for use in test to allow analysis to proceed when some leaves are 
   			# missing IDs
+  			
+  			
   		
   			$leafId = $nextId if $leafId eq '';
   			$nextId ++;
   		}
   		
-  		print STDERR "Duplicate leaf ID:", 
-  		             $leafId, 
-  		             "\t", 
-  		             $description, 
-  		             "\n" if $nodeId2node{$leafId};
-  		die if $nodeId2node{$leafId};
+  		if ($nodeId2node{$leafId}) {
+  		
+  			print STDERR "Duplicate leaf ID:", 
+  		             	 $leafId, 
+  		             	 "\t", 
+  		             	 $description, 
+  		             	 "\n";
+  		}
+  		
   		$leafId .= 'X' if $nodeId2node{$leafId}; 		
   		$maxId = $leafId if $maxId < $leafId;
   		$leaf -> id($leafId); # original metadata gets overwritten by numerical ID
@@ -277,7 +349,7 @@ if (my $tree = $treeio->next_tree) {
   		push @{${$term2leaf{'GENUS'}}{$genus}}, $leaf;
   		push @{${$term2leaf{'FAMILY'}}{$family}}, $leaf;
   		push @{${$term2leaf{'ORDER'}}{$order}}, $leaf;
-  		my $parent = $leaf -> ancestor;
+  		my $parent = $leaf -> ancestor;  		
   		push @parents, $parent;
   		  		
   		# each leaf is the "labelled node" for the specimen
@@ -296,12 +368,6 @@ if (my $tree = $treeio->next_tree) {
   		${${$taxon2ancestor{'GENUS'}}{$genus}}{'FAMILY'} = $family;
   		${${$taxon2ancestor{'GENUS'}}{$genus}}{'ORDER'} = $order;
   		${${$taxon2ancestor{'FAMILY'}}{$family}}{'ORDER'} = $order;  
-  		
-  		if ($genus eq 'Pedicellarum') {
-  		
-  			print STDERR join "*\t", $specimen, $species, $genus, $family, $order;
-  			print STDERR "\n";
-  		}
     }
     
     print STDERR "Accepted node count: ", scalar keys %nodeId2node, "\n";
@@ -430,13 +496,14 @@ if (my $tree = $treeio->next_tree) {
 					print "M";
 					$mono{$rank} ++;
 			 		${${$taxonSize2phylyCount{$rank}}{$taxonSize}}{'M'} ++;
-			 		print MONO $rank, "\t", $term,"\n";
+			 		print MONO $rank, "\t", $term, "\tM\n";
 		
 				} else {
 		
 					print "P";
 					$para{$rank} ++;
 			 		${${$taxonSize2phylyCount{$rank}}{$taxonSize}}{'P'} ++;
+			 		print MONO $rank, "\t", $term, "\tP\n";
 				}
 			
 				# what proportion of nodes under the LCA belong to the specified taxon?
@@ -614,17 +681,12 @@ if (my $tree = $treeio->next_tree) {
 					
 					${${$term2score{$rank}}{$term}}{$nodeId} = $nodeCoverageByTerm * 
 															   $termCoverageByNode;
-															   
-					if ($term eq 'Pedicellarum') {
-					
-						print STDERR join "\t", $nodeId, $nodeCoverageByTerm, $termCoverageByNode, "\n";
-					}
 					
 					${${$term2nodeCoverageByTerm{$rank}}{$term}}{$nodeId} = 
 						$nodeCoverageByTerm;
 						
 					${${$term2termCoverageByNode{$rank}}{$term}}{$nodeId} = 
-						$termCoverageByNode;				
+						$termCoverageByNode;		
 				}
 			}
 		}
@@ -724,7 +786,7 @@ if (my $tree = $treeio->next_tree) {
 			                 ${${$term2score{$rank}}{$term}}{$nodeId};
 			  
 			print "\n";
-		
+			
 			# summary statistics re family coherence
 			
 			if ($rank eq 'FAMILY') {
@@ -883,6 +945,11 @@ if (my $tree = $treeio->next_tree) {
 			# for each ancestral node
 			
 			for my $testNode (keys %{$nodeId2ancestorId{$node}}) {
+			
+				if (($taxon eq 'Balanops vieillardii') && ($rank eq 'SPECIMEN')) {
+					
+					print STDERR "Testing $testNode\n";
+				}
 	
 				# does it correspond to an ancestral taxon at any relevant rank?
 				
@@ -892,6 +959,9 @@ if (my $tree = $treeio->next_tree) {
 				
 					# if $opt_well is specified, only count mistmatches to well-defined
 					# parents
+					
+					print STDERR $level, "\t", $parent, "\n" 
+						if (($taxon eq 'Balanops vieillardii') && ($rank eq 'SPECIMEN'));
 										
 					if (($opt_well) && (! ${$wellResolved{$level}}{$parent})) {
 					
@@ -899,12 +969,20 @@ if (my $tree = $treeio->next_tree) {
 					
 					} elsif (defined ${$labelledNodeId2taxon{$level}}{$testNode}) {
 				
+						print STDERR "Mapped node\n" 
+							if (($taxon eq 'Balanops vieillardii') && 
+							    ($rank eq 'SPECIMEN'));
+					
 						for my $species 
 							(@{${$labelledNodeId2taxon{$level}}{$testNode}}) {
 					
 							if ($species eq $parent) {
 						
 								$match{$level} ++;
+								
+								print STDERR "Match\n" 
+									if (($taxon eq 'Balanops vieillardii') && 
+									    ($rank eq 'SPECIMEN'));
 							}
 						}
 					}
@@ -950,7 +1028,7 @@ if (my $tree = $treeio->next_tree) {
 					$text .= ' !' if ${$term2warning{$level}}{$ancestor};
 					
 					# is the taxon an outlier wrt the ancestral taxon?
-					# if ancestral taxon is very poorly resolved, treat all its children
+					# if ancestral taxon is poorly resolved, treat all its children
 					# as outliers
 					
 					if ((($level eq 'SPECIES') && ($rankKey =~ /0\d\d\d$/)) ||
@@ -976,7 +1054,8 @@ if (my $tree = $treeio->next_tree) {
 					
 					# is the taxon the only representative of the ancestral taxon?
 					# only consider this at family/order level
-					# (most genera and species are only represented by a single specimen)
+					# (most genera and species are usually 
+					# only represented by a single specimen)
 					
 					if ((($level eq 'FAMILY') || ($level eq 'ORDER')) &&
 					     (${$singletons{$level}}{$ancestor})) {
@@ -1008,8 +1087,8 @@ if (my $tree = $treeio->next_tree) {
 					        
 					        if ($reportText !~ /ORDER/) {
 					        
-					        	$problem = 'C'; # can't confirm at family level but order is
-					                        	# fine
+					        	$problem = 'C'; # can't confirm at family level but order 
+					        					# is fine
 					                        	
 					        } elsif ((${$singletons{'ORDER'}}{$order} == 1) ||
 					                 (${$term2warning{'ORDER'}}{$order} == 1)) {
