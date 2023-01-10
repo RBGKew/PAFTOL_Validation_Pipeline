@@ -139,7 +139,7 @@ if todo_pt.shape[0]>0:
 todo = todo_pt.sort_values(by='R1_size')
 ### Paul B. - trying to accept single-end data also for SRA samples)
 # todo_pt = todo_pt[(todo_pt.R1_exist) & (todo_pt.R2_exist)]
-todo_pt = todo_pt[ ((todo_pt.R1_exist) & (todo_pt.R2_exist) ) | ((todo_pt.R1_exist) & (!todo_pt.R2_exist)) ]
+todo_pt = todo_pt[ ((todo_pt.R1_exist) & (todo_pt.R2_exist) ) | (todo_pt.R1_exist & todo_pt.R2_exist.isnull()) ]
 if todo_pt.shape[0]>0:
     #print(todo_pt.shape[0],'paired-end fastq files found')
     print(todo_pt.shape[0],'paired-end or single-end fastq files found')
@@ -158,7 +158,7 @@ if todo_nr.shape[0]>0:
 # Paul B. added - sort by file size
 todo_nr = todo_nr.sort_values(by='R1_size')
 #todo_nr = todo_nr[(todo_nr.R1_exist) & (todo_nr.R2_exist)]
-todo_nr = todo_nr[ ((todo_nr.R1_exist) & (todo_nr.R2_exist)) | ((todo_nr.R1_exist) & (!todo_nr.R2_exist)) ]
+todo_nr = todo_nr[ ((todo_nr.R1_exist) & (todo_nr.R2_exist)) | (todo_nr.R1_exist & todo_nr.R2_exist.isnull()) ]
 if todo_nr.shape[0]>0:
     #print(todo_nr.shape[0],'paired-end fastq files found')
     print(todo_nr.shape[0],'paired-end or single-end fastq files found')
