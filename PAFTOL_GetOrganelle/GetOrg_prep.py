@@ -137,7 +137,8 @@ if todo_pt.shape[0]>0:
 #         print(row['R2_path'],end=':'); print(os.path.exists( str(row['R2_path']) ))
         todo_pt.loc[idx,'R2_exist'] = os.path.exists( str(row['R2_path']) )
 # Paul B. added - sort by file size
-todo = todo_pt.sort_values(by='R1_size')
+todo_pt = todo_pt.sort_values(by='R1_size')
+print(todo_pt[['Sample_Name','R1_size']])
 ### Paul B. - trying to accept single-end data also for SRA samples)
 # todo_pt = todo_pt[(todo_pt.R1_exist) & (todo_pt.R2_exist)]
 todo_pt = todo_pt[ ((todo_pt.R1_exist) & (todo_pt.R2_exist) ) | (todo_pt.R1_exist & todo_pt.R2_exist.isnull()) ]
