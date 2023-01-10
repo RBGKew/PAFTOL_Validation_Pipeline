@@ -130,25 +130,38 @@ if todo_nr.shape[0]>0:
 if todo_pt.shape[0]>0:
     for idx, row in todo_pt.iterrows():
 #         print(row['R1_path'],end=':'); print(os.path.exists(row['R1_path']))
-        todo_pt.loc[idx,'R1_exist'] = os.path.exists(row['R1_path'])
-#         print(row['R2_path'],end=':'); print(os.path.exists(row['R2_path']))
-        todo_pt.loc[idx,'R2_exist'] = os.path.exists(row['R2_path'])
-todo_pt = todo_pt[(todo_pt.R1_exist) & (todo_pt.R2_exist)]
+        todo_pt.loc[idx,'R1_exist'] = os.path.exists( str(row['R1_path']) )
+        # Paul B. added:
+        todo_pt.loc[idx,'R1_size'] = os.stat( int(row['R1_path']) ).st_size
+#         print(row['R2_path'],end=':'); print(os.path.exists( str(row['R2_path']) ))
+        todo_pt.loc[idx,'R2_exist'] = os.path.exists( str(row['R2_path']) )
+# Paul B. added - sort by file size
+todo = todo_pt.sort_values(by='R1_size')
+### Paul B. - trying to accept single-end data also for SRA samples)
+# todo_pt = todo_pt[(todo_pt.R1_exist) & (todo_pt.R2_exist)]
+todo_pt = todo_pt[ ((todo_pt.R1_exist) & (todo_pt.R2_exist) ) | ((todo_pt.R1_exist) & (!todo_pt.R2_exist)) ]
 if todo_pt.shape[0]>0:
-    print(todo_pt.shape[0],'paired-end fastq files found')
+    #print(todo_pt.shape[0],'paired-end fastq files found')
+    print(todo_pt.shape[0],'paired-end or single-end fastq files found')
     todo_pt[['Sample_Name','R1_path','R2_path']].to_csv(DataSource + '/remaining_pt.txt',index=False,header=None)
 else:
     print('no fastq file found or no sample to process, remaining list not written')
 
 if todo_nr.shape[0]>0:
     for idx, row in todo_nr.iterrows():
-#         print(row['R1_path'],end=':'); print(os.path.exists(row['R1_path']))
-        todo_nr.loc[idx,'R1_exist'] = os.path.exists(row['R1_path'])
-#         print(row['R2_path'],end=':'); print(os.path.exists(row['R2_path']))
-        todo_nr.loc[idx,'R2_exist'] = os.path.exists(row['R2_path'])
-todo_nr = todo_nr[(todo_nr.R1_exist) & (todo_nr.R2_exist)]
+#         print(row['R1_path'],end=':'); print(os.path.exists( str(row['R1_path']) )
+        todo_nr.loc[idx,'R1_exist'] = os.path.exists( str(row['R1_path']) )
+        # Paul B. added:
+        todo_nr.loc[idx,'R1_size'] = os.stat( int(row['R1_path']) ).st_size
+#         print(row['R2_path'],end=':'); print(os.path.exists( str(row['R2_path']))
+        todo_nr.loc[idx,'R2_exist'] = os.path.exists( str(row['R2_path'])
+# Paul B. added - sort by file size
+todo_nr = todo_nr.sort_values(by='R1_size')
+#todo_nr = todo_nr[(todo_nr.R1_exist) & (todo_nr.R2_exist)]
+todo_nr = todo_nr[ ((todo_nr.R1_exist) & (todo_nr.R2_exist)) | ((todo_nr.R1_exist) & (!todo_nr.R2_exist)) ]
 if todo_nr.shape[0]>0:
-    print(todo_nr.shape[0],'paired-end fastq files found')
+    #print(todo_nr.shape[0],'paired-end fastq files found')
+    print(todo_nr.shape[0],'paired-end or single-end fastq files found')
     todo_nr[['Sample_Name','R1_path','R2_path']].to_csv(DataSource + '/remaining_nr.txt',index=False,header=None)
 else:
     print('no fastq file found or no sample to process, remaining list not written')
