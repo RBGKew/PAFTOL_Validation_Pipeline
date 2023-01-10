@@ -17,7 +17,7 @@ import shutil
 import sys
 import argparse
 from Bio import SeqIO
-import BioSeq.py    # Paul B. - for testing error in BioSeqIO
+import pysqlite3    # Paul B. - for testing error in BioSeqIO
 
 
 # In[ ]:
