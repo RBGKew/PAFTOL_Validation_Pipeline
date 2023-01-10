@@ -132,7 +132,8 @@ if todo_pt.shape[0]>0:
 #         print(row['R1_path'],end=':'); print(os.path.exists(row['R1_path']))
         todo_pt.loc[idx,'R1_exist'] = os.path.exists( str(row['R1_path']) )
         # Paul B. added:
-        todo_pt.loc[idx,'R1_size'] = os.stat( int(row['R1_path']) ).st_size
+        if os.path.exists( str(row['R1_path']) ):
+            todo_pt.loc[idx,'R1_size'] = os.stat( str(row['R1_path']) ).st_size
 #         print(row['R2_path'],end=':'); print(os.path.exists( str(row['R2_path']) ))
         todo_pt.loc[idx,'R2_exist'] = os.path.exists( str(row['R2_path']) )
 # Paul B. added - sort by file size
@@ -152,7 +153,8 @@ if todo_nr.shape[0]>0:
 #         print(row['R1_path'],end=':'); print(os.path.exists( str(row['R1_path']) )
         todo_nr.loc[idx,'R1_exist'] = os.path.exists( str(row['R1_path']) )
         # Paul B. added:
-        todo_nr.loc[idx,'R1_size'] = os.stat( int(row['R1_path']) ).st_size
+        if os.path.exists( str(row['R1_path']) ):
+            todo_nr.loc[idx,'R1_size'] = os.stat( str(row['R1_path']) ).st_size
 #         print(row['R2_path'],end=':'); print(os.path.exists( str(row['R2_path']))
         todo_nr.loc[idx,'R2_exist'] = os.path.exists( str(row['R2_path']) )
 # Paul B. added - sort by file size
