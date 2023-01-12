@@ -11,9 +11,9 @@ slurmThrottle=5
 
 ## Make lists of remaining  samples that have no organelles recovered
 ### Paul B. removing next 3 kines for tests 
-###rm -f $DataSource/remaining_pt.txt
-###rm -f $DataSource/remaining_nr.txt;
-###python GetOrg_prep.py --db $paftol_export --DataSource $DataSource --rem_search $rem_search
+rm -f $DataSource/remaining_pt.txt
+rm -f $DataSource/remaining_nr.txt;
+python GetOrg_prep.py --db $paftol_export --DataSource $DataSource --rem_search $rem_search
 
 
 ## Go to dir and create working directories
