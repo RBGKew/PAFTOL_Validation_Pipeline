@@ -48,12 +48,13 @@ else
 	
 	if [ $org == pt ] 
 	then
-		get_organelle_from_reads.py -u Data/$file_R1.gz -o GetOrg/"$sample"_pt \
+		# Paul B. - added '--overwrite 'otherwise get organelle will not run if folder already exists  
+		get_organelle_from_reads.py --overwrite -u Data/$file_R1.gz -o GetOrg/"$sample"_pt \
 		--max-reads 536870912 -R 20 -k 21,45,65,85,105 -t $ncpu -F embplant_pt --zip-files > \
 		logs/log_${sample}_pt.log 2> logs/log_${sample}_pt.err
 	elif [ $org == nr ]
 	then
-		get_organelle_from_reads.py -u Data/$file_R1.gz -o GetOrg/"$sample"_nr \
+		get_organelle_from_reads.py --overwrite -u Data/$file_R1.gz -o GetOrg/"$sample"_nr \
 		--max-reads 536870912 -R 10 -k 35,85,115 -t $ncpu -F embplant_nr --zip-files > \
 		logs/log_${sample}_nr.log 2> logs/log_${sample}_nr.err
 	fi
