@@ -54,14 +54,14 @@ if len(fasta_files)==1:
     print('1 fasta file:',fasta_files[0])
     shutil.copyfile(path + fasta_files[0], 'fasta_' + org + '/' + Sample + '_' + org + '.fasta')
 
-    # Paul B. - Testing Bio.SeqIO works for each sample, even if one one fasta file present
-    for test_fasta in fasta_files:
-        sum_len=0
-        for record in SeqIO.parse(path + test_fasta, "fasta"):
-            sum_len += len(record.seq)
-        if sum_len>best_len:
-            best_len=sum_len
-            best_fasta=ifasta
+    # Paul B. - Testing Bio.SeqIO works for each sample, even if one one fasta file present (remove once tested)
+    #for test_fasta in fasta_files:
+    #    sum_len=0
+    #    for record in SeqIO.parse(path + test_fasta, "fasta"):
+    #        sum_len += len(record.seq)
+    #    if sum_len>best_len:
+    #        best_len=sum_len
+    #        best_fasta=ifasta
 
 elif len(fasta_files)>1:
     print('found',len(fasta_files),'fasta files')
