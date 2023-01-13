@@ -47,7 +47,9 @@ rem_search = args.rem_search
 db = pd.read_csv(export_file)
 db = db[(db.DataSource==DataSource) & (db.R1FastqFile.notnull())]
 if DataSource == 'PAFTOL':
-    fastq_path = '/science/projects/paftol/AllData_symlinks/'
+    # Paul B. - modified path to process PAFTOL2.0 data
+    #fastq_path = '/science/projects/paftol/AllData_symlinks/'
+    fastq_path = '/science/projects/paftol/AllData_symlinks_PAFTOL2.0/'
     db['Sample_Name'] = 'PAFTOL_' + db['idSequencing'].astype(int).astype('str').str.zfill(6)
     db['R1_path'] = fastq_path + db.Sample_Name + '_R1.fastq.gz'
     db['R2_path'] = fastq_path + db.Sample_Name + '_R2.fastq.gz'
@@ -138,7 +140,7 @@ if todo_pt.shape[0]>0:
         todo_pt.loc[idx,'R2_exist'] = os.path.exists( str(row['R2_path']) )
 # Paul B. added - sort by file size
 todo_pt = todo_pt.sort_values(by='R1_size')
-pd.set_option('display.max_colwidth', None) 
+pd.set_option('display.max_rows', len(todo_pt)) # -->  pd.reset_option('display.max_rows')
 print(todo_pt[['Sample_Name','R1_size']])
 ### Paul B. - trying to accept single-end data also for SRA samples)
 # todo_pt = todo_pt[(todo_pt.R1_exist) & (todo_pt.R2_exist)]
