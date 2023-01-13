@@ -60,8 +60,8 @@ elif DataSource == 'GAP':
     db['R2_path'] = fastq_path + db.Sample_Name + '_R2.fastq.gz'
 elif DataSource == 'SRA':
     # Paul B. - modified path to process SRA data from these subsets: paftol/SRA_from_ARZ/new_SRA_batch_2/SP014[678]
-    #fastq_path = '/data/projects/paftol/SRA_Data/'
-    fastq_path = '/data/projects/paftol/new_data_ARZ_Jan22/SP0146'
+    fastq_path = '/data/projects/paftol/SRA_Data/'
+    #fastq_path = '/data/projects/paftol/new_data_ARZ_Jan22/SP0146'
     db['Sample_Name'] = db.ExternalSequenceID
     db['R1_path'] = fastq_path + db.R1FastqFile
     db['R2_path'] = fastq_path + db.R2FastqFile
