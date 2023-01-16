@@ -60,8 +60,8 @@ elif DataSource == 'GAP':
     db['R2_path'] = fastq_path + db.Sample_Name + '_R2.fastq.gz'
 elif DataSource == 'SRA':
     # Paul B. - modified path to process SRA data from these subsets: paftol/SRA_from_ARZ/new_SRA_batch_2/SP014[678]
-    fastq_path = '/data/projects/paftol/SRA_Data/'
-    fastq_path = '/data/projects/paftol/new_data_ARZ_Jan22/SP0146/'
+    #fastq_path = '/data/projects/paftol/SRA_Data/'
+    fastq_path = '/data/projects/paftol/new_data_ARZ_Jan22/SP0147/'
     db['Sample_Name'] = db.ExternalSequenceID
     db['R1_path'] = fastq_path + db.R1FastqFile
     db['R2_path'] = fastq_path + db.R2FastqFile
@@ -135,8 +135,6 @@ if todo_pt.shape[0]>0:
     for idx, row in todo_pt.iterrows():
 #         print(row['R1_path'],end=':'); print(os.path.exists(row['R1_path']))
         todo_pt.loc[idx,'R1_exist'] = os.path.exists( str(row['R1_path']) )
-        # Paul B. added:
-        todo_pt['R1_size']=False
         if os.path.exists( str(row['R1_path']) ):
             todo_pt.loc[idx,'R1_size'] = os.stat( str(row['R1_path']) ).st_size
 #         print(row['R2_path'],end=':'); print(os.path.exists( str(row['R2_path']) ))
@@ -159,8 +157,6 @@ if todo_nr.shape[0]>0:
     for idx, row in todo_nr.iterrows():
 #         print(row['R1_path'],end=':'); print(os.path.exists( str(row['R1_path']) )
         todo_nr.loc[idx,'R1_exist'] = os.path.exists( str(row['R1_path']) )
-        # Paul B. added:
-        todo_nr['R1_size']=False
         if os.path.exists( str(row['R1_path']) ):
             todo_nr.loc[idx,'R1_size'] = os.stat( str(row['R1_path']) ).st_size
 #         print(row['R2_path'],end=':'); print(os.path.exists( str(row['R2_path']))
