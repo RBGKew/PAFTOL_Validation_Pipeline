@@ -28,8 +28,8 @@ then
 	fasta_nr_file=in_fasta/"$sample".fasta
 elif [ $type == pt_nr ] 
 then
-	fasta_pt_file=/data/projects/paftol/Organelles/${project_dir}/fasta_pt/"$sample"_pt.fasta
-	fasta_nr_file=/data/projects/paftol/Organelles/${project_dir}/fasta_nr/"$sample"_nr.fasta
+	fasta_pt_file=fasta_pt/"$sample"_pt.fasta
+	fasta_nr_file=fasta_nr/"$sample"_nr.fasta
 fi
 
 echo "sample:$sample,pt_fasta:$fasta_pt_file,nr_fasta:$fasta_nr_file"
