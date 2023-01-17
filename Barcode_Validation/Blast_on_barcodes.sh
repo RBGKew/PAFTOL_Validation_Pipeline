@@ -28,9 +28,6 @@ then
 	fasta_nr_file=in_fasta/"$sample".fasta
 elif [ $type == pt_nr ] 
 then
-	### Paul B. - changed to point to the original directory (instead of copying files)
-	###fasta_pt_file=fasta_pt/"$sample"_pt.fasta
-	###fasta_nr_file=fasta_nr/"$sample"_nr.fasta
 	fasta_pt_file=/data/projects/paftol/Organelles/${project_dir}/fasta_pt/"$sample"_pt.fasta
 	fasta_nr_file=/data/projects/paftol/Organelles/${project_dir}/fasta_nr/"$sample"_nr.fasta
 fi
