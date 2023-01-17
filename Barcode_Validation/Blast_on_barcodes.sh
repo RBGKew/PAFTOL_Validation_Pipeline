@@ -19,8 +19,8 @@ cd $project_dir
 
 barcodes_table=../Barcode_DB/Barcode_Tests.csv
 Samples_file=Samples_to_barcode.txt
-# sample=$(sed -n "$SLURM_ARRAY_TASK_ID"p $Samples_file)
-sample=$(sed -n 1p $Samples_file)
+sample=$(sed -n "$SLURM_ARRAY_TASK_ID"p $Samples_file)
+#sample=$(sed -n 1p $Samples_file)
 
 if [ $type == contigs ] 
 then
