@@ -91,10 +91,9 @@ USAGE
 # compared to one or more ancestral taxa.  A specimen is treated as the lowest taxonomic
 # rank, i.e., taxonomic hierarchy is order, family, genus, species, specimen
 #
-# The report identifies all irregularities across the hierarchy, but for then purpose of
+# The report identifies all irregularities across the hierarchy, but for the purpose of
 # review we focus on specimen - family irregularities
 # 
-#
 # First character:
 # -: if this row does not describe an incongruity concerning the familiar placement of a
 #    specimen.  Can be ignored for the purpose of review.
@@ -107,7 +106,7 @@ USAGE
 # Next: O and/or S
 # O: this row describes a taxon that is an outlier compared to one or more ancestral taxa
 #    or one or more ancestral taxa are poorly resolved.
-# S: this row describes a taxon that is the only representative of its family or order
+# S: this row describes a taxon that is the only representative of its family or order;
 #    all rows that begin with C will have this status.
 # both flags can be applicable because the row describes how a taxon compares with all
 # it's ancestral taxa.
@@ -221,7 +220,7 @@ if (my $tree = $treeio->next_tree) {
   		my $family = $fields[1];
   		my $genus = $fields[2];
   		my $species = $fields[3]; 
-  		my $leafId = $fields[5]; # changing from 4 for bigtree paper
+  		my $leafId = $fields[4];
   		my $blacklist; # not currently in use	
   		
   		# my ($order, $family, $genus, $species, $leafId, $blacklist) = 
@@ -319,8 +318,6 @@ if (my $tree = $treeio->next_tree) {
   			# code for use in test to allow analysis to proceed when some leaves are 
   			# missing IDs
   			
-  			
-  		
   			$leafId = $nextId if $leafId eq '';
   			$nextId ++;
   		}
@@ -378,10 +375,9 @@ if (my $tree = $treeio->next_tree) {
     	print STDERR $rank, "\t", scalar keys %{$term2leaf{$rank}}, "\n";
     }
     
-    print STDERR "Duplicates: ", 
-    			  $duplicateCount, 
-    			  "\tDuplicate species: ", 
-    			  scalar keys %duplicateSpecies, "\n";
+    print STDERR  $duplicateCount, 
+    			  " duplicate specimens for ",
+    			  scalar keys %duplicateSpecies, " duplicate species.\n";
     
     # work through tree from tips upward, mapping internal nodes to data from their 
     # leaves
@@ -1580,3 +1576,4 @@ sub _processNode($$$) {
 }
 
 __END__
+
