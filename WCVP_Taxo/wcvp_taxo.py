@@ -309,7 +309,7 @@ def find_sim(sci_name, wcvp, only_from_genus=True):
 #Find closely matching scientific name using kew namematching system
 def kew_namematch(sci_name, verbose=False):
     url = "http://namematch.science.kew.org/api/v2/powo/csv"
-    payload = '{\"column\": 0,\"headers\": false,\"outputAllColumns\": true,\"currentChunk\": 0,\"data\": [[\"' +        sci_name + '\"]]}'
+    payload = '{\"column\": 0,\"headers\": false,\"outputAllColumns\": true,\"currentChunk\": 0,\"data\": [[\"' + sci_name + '\"]]}'
     headers = {
       'Content-Type': 'application/json'
     }
@@ -435,7 +435,7 @@ if __name__ == "__main__":
         print('find_most_similar: found',smpl_df.Similar_match.sum(),'IDs by similarity')
         
     # Check if Ini_scinames have duplicate entries
-    dupl_taxon_names = wcvp[wcvp.taxon_name.isin(smpl_df.sci_name)]['taxon_name'].to_frame().groupby('taxon_name').size()                    .to_frame().reset_index().rename(columns={0:'count'})
+    dupl_taxon_names = wcvp[wcvp.taxon_name.isin(smpl_df.sci_name)]['taxon_name'].to_frame().groupby('taxon_name').size().to_frame().reset_index().rename(columns={0:'count'})
     dupl_taxon_names = dupl_taxon_names[dupl_taxon_names['count']>1].taxon_name
     smpl_df['Duplicates']=smpl_df.sci_name.isin(dupl_taxon_names)
     print('Duplicates:',(smpl_df.Duplicates==True).sum(),'IDs matching multiple entries in WCVP')
@@ -455,7 +455,7 @@ if __name__ == "__main__":
     print('After direct matching: found match for',return_df.shape[0],'IDs')
     
     # Resolving synonyms
-    synonyms = match[match.taxonomic_status.isin(['Synonym','Homotypic_Synonym'])]                .rename(columns={'kew_id':'Ini_kew_id','accepted_kew_id':'kew_id','taxonomic_status':'Ini_taxonomic_status'})
+    synonyms = match[match.taxonomic_status.isin(['Synonym','Homotypic_Synonym'])].rename(columns={'kew_id':'Ini_kew_id','accepted_kew_id':'kew_id','taxonomic_status':'Ini_taxonomic_status'})
     cols_syn=list(smpl_dfs.columns) + ['Ini_kew_id','Ini_taxonomic_status']
     return_syn = get_by_kew_id(df = synonyms[cols_syn + ['kew_id']], wcvp = wcvp)
     return_df=pd.concat([return_df,return_syn]).reset_index().drop(columns='index')
@@ -468,7 +468,7 @@ if __name__ == "__main__":
     return_dupl = match[match.taxonomic_status.isin(status_keep)]
     
     # Resolving synonyms in duplicates
-    synonyms = match[match.taxonomic_status.isin(['Synonym','Homotypic_Synonym'])]                .rename(columns={'kew_id':'Ini_kew_id','accepted_kew_id':'kew_id','taxonomic_status':'Ini_taxonomic_status'})
+    synonyms = match[match.taxonomic_status.isin(['Synonym','Homotypic_Synonym'])].rename(columns={'kew_id':'Ini_kew_id','accepted_kew_id':'kew_id','taxonomic_status':'Ini_taxonomic_status'})
     return_syn = get_by_kew_id(df = synonyms[cols_syn + ['kew_id']], wcvp = wcvp)
     return_dupl=pd.concat([return_dupl,return_syn]).reset_index().drop(columns='index')
     
@@ -479,8 +479,8 @@ if __name__ == "__main__":
     if dupl_action=='rank':
         # Sort matches by ranked taxonomic status and ID
         dupl_df['taxo_rank']=dupl_df.taxonomic_status
-        dupl_df.loc[dupl_df['Ini_taxonomic_status'].isna()==False,'taxo_rank']=                    dupl_df.loc[dupl_df['Ini_taxonomic_status'].isna()==False,'Ini_taxonomic_status']
-        dupl_df['taxo_rank'] = dupl_df['taxo_rank']            .replace({'Accepted':1, 'Unplaced':2, 'Synonym':3,'Homotypic_Synonym':4,'Artificial Hybrid':5})
+        dupl_df.loc[dupl_df['Ini_taxonomic_status'].isna()==False,'taxo_rank']= dupl_df.loc[dupl_df['Ini_taxonomic_status'].isna()==False,'Ini_taxonomic_status']
+        dupl_df['taxo_rank'] = dupl_df['taxo_rank'].replace({'Accepted':1, 'Unplaced':2, 'Synonym':3,'Homotypic_Synonym':4,'Artificial Hybrid':5})
         dupl_df = dupl_df.sort_values('taxo_rank').drop_duplicates('ID').reset_index().drop(columns=['taxo_rank','index'])
         return_df = pd.concat([return_df,dupl_df])
     else:
@@ -532,7 +532,7 @@ if __name__ == "__main__":
     smpl_df.loc[mod_gensp,'taxon_name']=smpl_df.loc[mod_gensp,'genus'] + ' sp.'
     smpl_df.loc[mod_gensp,'species']=np.nan
     #Sort table by ID
-    out_df = smpl_df.sort_values('ID').reset_index()                .drop(columns=['index','Genus_sp','accepted_kew_id','accepted_name','accepted_authors','reviewed'])                .rename(columns={'sci_name':'sci_name_query','taxon_name':'sci_name'})
+    out_df = smpl_df.sort_values('ID').reset_index().drop(columns=['index','Genus_sp','accepted_kew_id','accepted_name','accepted_authors','reviewed']).rename(columns={'sci_name':'sci_name_query','taxon_name':'sci_name'})
     
     
     
@@ -558,7 +558,7 @@ if __name__ == "__main__":
         if 'Ini_Family' in out_df:
             out_df['Same_family']=(out_df.Ini_Family==out_df.family)
             print('Family match:',out_df.groupby('Same_family').size().to_dict())
-            out_df = out_df[(out_df.Same_family==False) | (out_df.Same_sci_name==False)]                    .drop(columns=['Same_sci_name'])
+            out_df = out_df[(out_df.Same_family==False) | (out_df.Same_sci_name==False)].drop(columns=['Same_sci_name'])
             simple_output.extend(['Same_family','Ini_Family','family'])
         else:
             out_df = out_df[(out_df.Same_sci_name==False)].drop(columns='Same_sci_name')
