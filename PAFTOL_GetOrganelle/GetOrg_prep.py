@@ -60,8 +60,8 @@ elif DataSource == 'GAP':
     db['R2_path'] = fastq_path + db.Sample_Name + '_R2.fastq.gz'
 elif DataSource == 'SRA':
     # Paul B. - modified path to process SRA data from these subsets: paftol/SRA_from_ARZ/new_SRA_batch_2/SP014[678]
-    #fastq_path = '/data/projects/paftol/SRA_Data/'
-    fastq_path = '/data/projects/paftol/new_data_ARZ_Jan22/SP0147/'
+    fastq_path = '/data/projects/paftol/SRA_Data/'
+    #fastq_path = '/data/projects/paftol/new_data_ARZ_Jan22/SP0147/'
     db['Sample_Name'] = db.ExternalSequenceID
     db['R1_path'] = fastq_path + db.R1FastqFile
     db['R2_path'] = fastq_path + db.R2FastqFile
@@ -145,7 +145,7 @@ pd.set_option('display.max_rows', len(todo_pt)) # -->  pd.reset_option('display.
 print(todo_pt[['Sample_Name','R1_size']])
 ### Paul B. - trying to accept single-end data also for SRA samples)
 # todo_pt = todo_pt[(todo_pt.R1_exist) & (todo_pt.R2_exist)]
-todo_pt = todo_pt[ ((todo_pt.R1_exist) & (todo_pt.R2_exist) ) | (todo_pt.R1_exist & todo_pt.R2_exist.isnull()) ]
+todo_pt = todo_pt[ ( (todo_pt.R1_exist) & (todo_pt.R2_exist) ) | ( todo_pt.R1_exist & todo_pt.R2_exist.isnull() ) ]
 if todo_pt.shape[0]>0:
     #print(todo_pt.shape[0],'paired-end fastq files found')
     print(todo_pt.shape[0],'paired-end or single-end fastq files found')
