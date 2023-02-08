@@ -42,6 +42,8 @@ mkdir -p $DataSource/Barcode_Validation
 ### List samples to blast by DataSource. 
 # Samples with existing validation cards will be omitted
 python Make_samples_list.py --db $paftol_export --DataSource $DataSource
+### Paul B. - to use another sample list, can comment out the above call and 
+### and create a Samples_to_barcode.txt file to use instead: format e.g. PAFTOL_000948
 
 Nsamples=($(wc -l $DataSource/'Samples_to_barcode.txt'))
 echo "blast $Nsamples samples on barcode databases" 
