@@ -66,7 +66,7 @@ my $USAGE =<<USAGE;
          perl pp.pl -tree treefile.nwk [-dup.dup.txt] -good g.txt -bad b.txt -alien a.txt -outlier o.txt -mono mono.txt -specimen s.txt -stats st.txt -tree2 new_treefile.nwk [-bootstrap bs.txt] [-order] [-well] [-help] > output.txt
 
          where:
-                tree=s  Input (unrooted) tree in Newick format
+                tree=s  Input (rooted) tree in Newick format
                  dup=s  Optional list of nodes to ignore
                 good=s  List of all specimens not needed for manual review (if running on a pre-tree)
                  bad=s  List of badly resolving higher taxa
@@ -191,6 +191,7 @@ my %taxon2ancestor;
 my %leafId2specimen;
 my %specimen2leafId;
 my %taxon2labelledNodeId;
+my $trueRootNodeId;
 
 my @ranks = ('ORDER', 'FAMILY', 'GENUS', 'SPECIES');
 
@@ -348,7 +349,7 @@ if (my $tree = $treeio->next_tree) {
   		push @{${$term2leaf{'ORDER'}}{$order}}, $leaf;
   		my $parent = $leaf -> ancestor;  		
   		push @parents, $parent;
-  		  		
+	
   		# each leaf is the "labelled node" for the specimen
   		
   		${$taxon2labelledNodeId{'SPECIMEN'}}{$specimen} = $leafId;
@@ -385,13 +386,18 @@ if (my $tree = $treeio->next_tree) {
     $id = $maxId + 1;
       	
   	PARENT: while (scalar @parents > 0) {
-  	
-  		my $parent = shift @parents;		
+  		
+  		my $parent = shift @parents;
+  		
+  		my $test = 0;	
+  			
   		if ($parent -> id ne '') {
   		
   			next PARENT; # node has already been done
   			
   		} else {
+  		
+  			my @childs;
   		
   			for my $child ($parent -> each_Descendent) {
   		
@@ -403,11 +409,21 @@ if (my $tree = $treeio->next_tree) {
   		 			unshift(@parents, $child, $parent);
   		 			next PARENT;
   		 		}
+  		 		
+  		 		push @childs, $child -> id;
   			}
-  		
-  			my $text;
-  			$parent -> id($id); # assign an ID for this node	
+  			
+  			$parent -> id($id); # assign an ID for this node			
+  			my $text;	
   			$nodeId2node{$id} = $parent;
+  			
+  			#print STDERR $id, "*";
+  			
+  			#if ($id eq '42920') {
+  			
+  			#	print STDERR Dumper @childs;
+  			#	die;
+  			#}
   			
   			# transfer child's data to parent
   			
@@ -451,7 +467,11 @@ if (my $tree = $treeio->next_tree) {
   			unshift @parents, $parent -> ancestor if defined $parent -> ancestor;
   		}		
   	}
-  	 	
+  	
+  	# last processed subtree is the overall tree root
+  	
+  	$trueRootNodeId = $id - 1;
+  		 	
   	# print out data per taxonomic term
   	
   	my (%mono, %para, %taxonSize2phylyCount, %nodeCoverageByTaxon, %singleMember);
@@ -1438,49 +1458,8 @@ if (my $tree = $treeio->next_tree) {
 		
 		push @{$reducedTreeReversed{$reducedTree{$nodeId}}}, $nodeId;
 	}
-		
-	## now create a properly rooted tree
-	
-	# in a tree with non-angiosperm outliers, the root should be inserted between the 
-	# angiosperms and the gymnosperms, and these should only be linked to each other via
-	# the root
 	
 	my %revisedTreeReversed;
-	my $trueRootNodeId = 10000;
-	my $angiospermNodeId = 18703;
-	my $gymnospermNodeId = 18702;
-	my @newList;	
-	push @{$reducedTreeReversed{$trueRootNodeId}}, $angiospermNodeId, $gymnospermNodeId;
-	
-	undef $reducedTree{$angiospermNodeId} 
-		if $reducedTree{$angiospermNodeId} eq $gymnospermNodeId;
-		
-	undef $reducedTree{$gymnospermNodeId} 
-		if $reducedTree{$gymnospermNodeId} eq $angiospermNodeId;
-		
-	my @newAngiospermList;
-	
-	for my $nodeId (@{$reducedTreeReversed{$angiospermNodeId}}) {
-	
-		push @newAngiospermList, $nodeId if $nodeId ne $gymnospermNodeId;
-	}
-	
-	undef  @{$reducedTreeReversed{$angiospermNodeId}};
-	push @{$reducedTreeReversed{$angiospermNodeId}}, @newAngiospermList;
-	
-	my @newGymnospermList;
-	
-	for my $nodeId (@{$reducedTreeReversed{$gymnospermNodeId}}) {
-	
-		push @newGymnospermList, $nodeId if $nodeId ne $angiospermNodeId;
-	}
-	
-	undef @{$reducedTreeReversed{$gymnospermNodeId}};
-	push @{$reducedTreeReversed{$gymnospermNodeId}}, @newGymnospermList;
-	
-	# now work through the tree starting from the new root
-	# both upwards and downwards relationships wrt the original root are downwards 
-	# relationships wrt the new root
 	
 	my @tips = ($trueRootNodeId);
 	
@@ -1532,6 +1511,14 @@ sub _processNode($$$) {
 	my %children = %$children;
 	my %nodeId2text = %$nodeId2text;
 	
+	# leaf node has children, shouldn't be able to happen
+	
+	if (($nodeId2text{$node}) && (defined $children{$node})) {
+	
+		print STDERR $node, "*\t", $nodeId2text{$node}, "\n";
+		die;
+	}
+	
 	if ((! defined $children{$node}) || (scalar @{%children{$node}} == 0)) {
 	
 		# node has no children, or node has no children left
@@ -1576,4 +1563,3 @@ sub _processNode($$$) {
 }
 
 __END__
-
