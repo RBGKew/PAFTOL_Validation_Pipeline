@@ -468,7 +468,8 @@ def get_duplicates_type(df):
 
 
 if __name__ == "__main__":
-    print('\n\n##### wcvp_taxo v0.5 ##### \nAuthor:   Kevin Leempoel \nLast update: 2021-03-25\n')
+    print('\n\n##### wcvp_taxo v0.6 ##### \nAuthor:   Kevin Leempoel \n'
+          'Last update (reviewed B. Gallego): 2024-04-14\n')
     
     print(wcvp_path, df_path, 'g:', resolve_genus, ' s:', find_most_similar, ' d:', dupl_action,
       ' oc:', only_changes, ' os:', simple_output, ' v:', verbose)
