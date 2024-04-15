@@ -250,6 +250,23 @@ def rename_wcvp_backbone_cols_to_match_code(wcvp_backbone):
     return wcvp_renamed
 
 
+def match_old_wcvp_backbone_format(wcvp_backbone):
+    """
+    The WCVP export format changed in 2022, after this script was writen.
+    This function adapts the WCVP backbone to the columns and column names
+    provided in the backbone from 2021, to ensure compatibility.
+
+    Parameters:
+    - a pandas dataframe with the ingested backbone.
+
+    Returns:
+    - a pandas dataframe with the modified backbone.
+    """
+    return rename_wcvp_backbone_cols_to_match_code(
+        add_self_referenced_wcvp_data(
+            add_self_referenced_wcvp_data(wcvp_backbone, "parent"), "accepted"))
+
+
 def load_df(df_path):
     print('Loading dataset...',end='')
     try:
