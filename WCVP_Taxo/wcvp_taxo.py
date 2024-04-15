@@ -162,23 +162,23 @@ status_keep=['Accepted','Unplaced']
 
 # ### Data processing functions
 
-# In[4]:
-
 
 # Load wcvp file and save as pickle for faster loading
 def load_wcvp(wcvp_path):
     print('Loading WCVP...',end='')
+    file_extension = wcvp_path[-4:]
     # Load pickel
-    if os.path.exists(wcvp_path.replace('.txt','.pkl')):
+    if os.path.exists(wcvp_path.replace(file_extension,'.pkl')):
         print('found .pkl...',end='')
-        wcvp = pd.read_pickle(wcvp_path.replace('.txt','.pkl'))
+        wcvp = pd.read_pickle(wcvp_path.replace(file_extension,'.pkl'))
     elif os.path.exists(wcvp_path):
         wcvp = pd.read_table(wcvp_path,sep='|',encoding='utf-8')
-        print('found .txt, ',end='')
+        wcvp = match_old_wcvp_backbone_format(wcvp)
+        print(f'found {file_extension}, ',end='')
         # Remove extra columns
         wcvp = wcvp.drop(columns=['parent_kew_id','parent_name','parent_authors'])
         print('saving to .pkl...',end='')
-        wcvp.to_pickle(wcvp_path.replace('.txt','.pkl'))
+        wcvp.to_pickle(wcvp_path.replace(file_extension,'.pkl'))
     else:
         print('could not find',wcvp_path)
         sys.exit()
