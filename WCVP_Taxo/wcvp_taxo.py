@@ -235,6 +235,21 @@ def add_self_referenced_wcvp_data(wcvp_backbone, data_referenced):
     return wcvp_self_joined
 
 
+def rename_wcvp_backbone_cols_to_match_code(wcvp_backbone):
+    try:
+        wcvp_renamed = (wcvp_backbone.
+                        rename(columns = {"powo_id": "kew_id",
+                              "parent_powo_id": "parent_kew_id",
+                              "accepted_powo_id": "accepted_kew_id",
+                              "taxon_status": "taxonomic_status",
+                              "taxon_rank": "taxonomic_rank"})
+                       )
+    except Exception as e:
+        print("\nNot able to rename columns in backbone", e)
+        sys.exit()
+    return wcvp_renamed
+
+
 def load_df(df_path):
     print('Loading dataset...',end='')
     try:
