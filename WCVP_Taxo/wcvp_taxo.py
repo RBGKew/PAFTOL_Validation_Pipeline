@@ -162,29 +162,110 @@ status_keep=['Accepted','Unplaced']
 
 # ### Data processing functions
 
-# In[4]:
-
 
 # Load wcvp file and save as pickle for faster loading
 def load_wcvp(wcvp_path):
     print('Loading WCVP...',end='')
+    file_extension = wcvp_path[-4:]
     # Load pickel
-    if os.path.exists(wcvp_path.replace('.txt','.pkl')):
+    if os.path.exists(wcvp_path.replace(file_extension,'.pkl')):
         print('found .pkl...',end='')
-        wcvp = pd.read_pickle(wcvp_path.replace('.txt','.pkl'))
+        wcvp = pd.read_pickle(wcvp_path.replace(file_extension,'.pkl'))
     elif os.path.exists(wcvp_path):
         wcvp = pd.read_table(wcvp_path,sep='|',encoding='utf-8')
-        print('found .txt, ',end='')
+        wcvp = match_old_wcvp_backbone_format(wcvp)
+        print(f'found {file_extension}, ',end='')
         # Remove extra columns
         wcvp = wcvp.drop(columns=['parent_kew_id','parent_name','parent_authors'])
         print('saving to .pkl...',end='')
-        wcvp.to_pickle(wcvp_path.replace('.txt','.pkl'))
+        wcvp.to_pickle(wcvp_path.replace(file_extension,'.pkl'))
     else:
         print('could not find',wcvp_path)
         sys.exit()
     print(wcvp.shape[0],'entries')
     
     return wcvp
+
+
+def add_self_referenced_wcvp_data(wcvp_backbone, data_referenced):
+    """
+    Return the WCVP backbone table (dataframe) with appended columns
+    accessed by self referencing the table using the table Id.
+    Applicable to:
+    - Accepted names (accepted_plant_name_id points to table Id plant_name_id).
+    Relevant for names that are synonyms, for example.
+    - Parent taxa (parent_plant_name_id points to table Id plant_name_id).
+    Relevant to find the POWO Id at genus level of a given species name.
+    The columns added are relative to:
+    - Taxon name (parent_name, accepted_name)
+    - Taxon authors (parent_authors, accepted_authors)
+    - POWO Id (parent_kew_id, accepted_kew_id)
+    """
+    if data_referenced == "accepted":
+        filter_column = "taxon_status"
+        filter_value = "Accepted"
+    else:
+        filter_column = "taxon_rank"
+        filter_value = "Genus"
+    try:
+        # Keep "primary key" and data to be appended to the left table
+        wcvp_filtered = wcvp_backbone.loc[wcvp_backbone[filter_column].isin([filter_value])]
+        wcvp_right = (wcvp_filtered[["plant_name_id", "powo_id",
+                                     "taxon_name", "taxon_authors"]].
+                      rename(columns = {"plant_name_id": f"{data_referenced}_name_key",
+                                        "taxon_name": f"{data_referenced}_name",
+                                        "taxon_authors": f"{data_referenced}_authors",
+                                        "powo_id": f"{data_referenced}_powo_id"}
+                            )
+                     )
+        # Rename the "foreing key" to match "primary key" name of table on the right
+        wcvp_left = wcvp_backbone.rename(columns = {f"{data_referenced}_plant_name_id":
+                                                    f"{data_referenced}_name_key"})
+        # Left join the left table with reference right table
+        wcvp_self_joined = (pd.merge(wcvp_left, wcvp_right,
+                                    how="left",
+                                    on=[f"{data_referenced}_name_key"]
+                                   ).
+                            drop(columns = {f"{data_referenced}_name_key"})
+                           )
+    except Exception as e:
+        print(f"\nNot able to add {data_referenced} name data to backbone", e)
+        sys.exit()
+    print(f"\n{data_referenced} taxa information added to WCVP backbone.")
+    return wcvp_self_joined
+
+
+def rename_wcvp_backbone_cols_to_match_code(wcvp_backbone):
+    try:
+        wcvp_renamed = (wcvp_backbone.
+                        rename(columns = {"powo_id": "kew_id",
+                              "parent_powo_id": "parent_kew_id",
+                              "accepted_powo_id": "accepted_kew_id",
+                              "taxon_status": "taxonomic_status",
+                              "taxon_rank": "taxonomic_rank"})
+                       )
+    except Exception as e:
+        print("\nNot able to rename columns in backbone", e)
+        sys.exit()
+    return wcvp_renamed
+
+
+def match_old_wcvp_backbone_format(wcvp_backbone):
+    """
+    The WCVP export format changed in 2022, after this script was writen.
+    This function adapts the WCVP backbone to the columns and column names
+    provided in the backbone from 2021, to ensure compatibility.
+
+    Parameters:
+    - a pandas dataframe with the ingested backbone.
+
+    Returns:
+    - a pandas dataframe with the modified backbone.
+    """
+    return rename_wcvp_backbone_cols_to_match_code(
+        add_self_referenced_wcvp_data(
+            add_self_referenced_wcvp_data(wcvp_backbone, "parent"), "accepted"))
+
 
 def load_df(df_path):
     print('Loading dataset...',end='')
@@ -387,7 +468,8 @@ def get_duplicates_type(df):
 
 
 if __name__ == "__main__":
-    print('\n\n##### wcvp_taxo v0.5 ##### \nAuthor:   Kevin Leempoel \nLast update: 2021-03-25\n')
+    print('\n\n##### wcvp_taxo v0.6 ##### \nAuthor:   Kevin Leempoel \n'
+          'Last update (reviewed B. Gallego): 2024-04-14\n')
     
     print(wcvp_path, df_path, 'g:', resolve_genus, ' s:', find_most_similar, ' d:', dupl_action,
       ' oc:', only_changes, ' os:', simple_output, ' v:', verbose)
