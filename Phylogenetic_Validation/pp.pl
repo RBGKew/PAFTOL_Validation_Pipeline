@@ -417,14 +417,6 @@ if (my $tree = $treeio->next_tree) {
   			my $text;	
   			$nodeId2node{$id} = $parent;
   			
-  			#print STDERR $id, "*";
-  			
-  			#if ($id eq '42920') {
-  			
-  			#	print STDERR Dumper @childs;
-  			#	die;
-  			#}
-  			
   			# transfer child's data to parent
   			
   			for my $child ($parent -> each_Descendent) {
@@ -1303,6 +1295,30 @@ if (my $tree = $treeio->next_tree) {
 	my $outlierNodeId;
 	my ($inconsistent, $consistent) = 0;
 	
+	# label order nodes
+	
+	for my $nodeId (sort keys %{$labelledNodeId2taxon{'ORDER'}}) {
+	
+		my @texts;
+		
+		for my $term (@{${$labelledNodeId2taxon{'ORDER'}}{$nodeId}}) {
+		
+			my $text = $term . ' ';
+			
+			#my $text = uc $term ;
+			
+			#$text .= '_' . ((int (10* ${${$term2score{'ORDER'}}{$term}}{$nodeId})) / 10) 
+			#  if defined ${$term2score{'ORDER'}}{$term};   
+			
+			push @texts, $text;
+			$outlierNodeId = $nodeId if $text eq 'AMBORELLALES';
+		}
+		
+		$nodeId2text{$nodeId} .= join ',', @texts; 
+	}
+	
+	# also label family nodes
+		
 	if (! $opt_order) {
 	
 		for my $nodeId (keys %{$labelledNodeId2taxon{'FAMILY'}}) {
@@ -1325,42 +1341,21 @@ if (my $tree = $treeio->next_tree) {
 					$consistent ++;
 				}
 		
-				my $text = $term . $separator;
+				my $text = $term;
 				
 				# score for the labelled node (rounded down to the nearest 0.1)
 				# will be empty for single member families for which no score will have
 				# been calculated)
 				
-				$text .= ((int (10* ${${$term2score{'FAMILY'}}{$term}}{$nodeId})) / 10) 
-			  	  if defined ${$term2score{'FAMILY'}}{$term};		          
+				#$text .= $separator . 
+				#         ((int (10* ${${$term2score{'FAMILY'}}{$term}}{$nodeId})) / 10) 
+			  	#         if defined ${$term2score{'FAMILY'}}{$term};		          
 			
 				push @texts, $text;
 			}
 		
 			$nodeId2text{$nodeId} .= join ',', @texts; 
-			
-			print STDERR $nodeId, "\t", $nodeId2text{$nodeId}, "\n";
 		}
-	}
-	
-	# now do something similar for orders
-	
-	for my $nodeId (sort keys %{$labelledNodeId2taxon{'ORDER'}}) {
-	
-		my @texts;
-		
-		for my $term (@{${$labelledNodeId2taxon{'ORDER'}}{$nodeId}}) {
-			
-			my $text = uc $term . '_';
-			
-			$text .= ((int (10* ${${$term2score{'ORDER'}}{$term}}{$nodeId})) / 10) 
-			  if defined ${$term2score{'ORDER'}}{$term};   
-			        
-			push @texts, $text;
-			$outlierNodeId = $nodeId if $text eq 'AMBORELLALES_';
-		}
-		
-		$nodeId2text{$nodeId} .= join ',', @texts; 
 	}
 	
 	# create untipped tree (i.e. lose nodes downstream of interesting nodes)
@@ -1509,14 +1504,21 @@ sub _processNode($$$) {
 
 	my ($node, $string, $children, $nodeId2text) = @_;
 	my %children = %$children;
-	my %nodeId2text = %$nodeId2text;
+	#my %nodeId2text = %$nodeId2text;
 	
-	# leaf node has children, shouldn't be able to happen
+	# annotated node has children
 	
-	if (($nodeId2text{$node}) && (defined $children{$node})) {
-	
-		print STDERR $node, "*\t", $nodeId2text{$node}, "\n";
-		die;
+	if (($$nodeId2text{$node}) && (defined $children{$node})) {
+		
+		# transfer annotation to children
+		
+		for my $child (@{$children{$node}}) {
+		
+			print STDERR $node, "*\t", $child, "\t", $$nodeId2text{$node}, "\t", 
+			             $$nodeId2text{$child},"\n";
+		
+			$$nodeId2text{$child} = $$nodeId2text{$node} . " " . $$nodeId2text{$child};
+		}
 	}
 	
 	if ((! defined $children{$node}) || (scalar @{%children{$node}} == 0)) {
@@ -1525,12 +1527,15 @@ sub _processNode($$$) {
 	
 		$string .= ',' if (($string ne '') && ($string !~ /\($/));
 		
-		if ($nodeId2text{$node}) {
+		if ($$nodeId2text{$node}) {
 		
-			$string .= $nodeId2text{$node};
+			print STDERR $node, "*", $$nodeId2text{$node}, "\n";
+			
+			$string .= $$nodeId2text{$node};
 		
 		} else {
 		
+			
 			$string .= $node;
 		}
 	
@@ -1549,14 +1554,21 @@ sub _processNode($$$) {
 		
 		$string .=  ")";
 		
-		if ($nodeId2text{$node}) {
+		# add support values where these exist
 		
-			$string .= $nodeId2text{$node};
+		my $score = $nodeId2node{$node} -> bootstrap;
+		$string .= $score;
 		
-		} else {
+		# don't print out internal node labels
 		
-			$string .= $node;
-		}
+		#if ($nodeId2text{$node}) {
+		
+			#$string .= $nodeId2text{$node};
+		
+		#} else {
+		
+			#$string .= $node;
+		#}
 	}
 	
 	return $string;
