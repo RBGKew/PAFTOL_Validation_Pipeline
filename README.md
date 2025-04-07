@@ -25,7 +25,7 @@ The creation and curation of barcode databases is described in detail [here](Bar
 
 ### Samples
 #### Angiosperms 353
-For **PAFTOL**, **SRA** & **GAP** samples, plastomes and ribosomal DNA were recovered from raw reads using `GetOrganelles` (Jin et al. 2020). In both cases, recommended parameters were used (https://github.com/Kinggerm/GetOrganelle#recipes; i.e. -R 20 -k 21,45,65,85,105 for plastomes, and -R 10 -k 35,85,115 for nuclear ribosomes). Our GetOrganelle script is in [PAFTOL_Get_Organelles](PAFTOL_Get_Organelles/)
+For **PAFTOL**, **SRA** & **GAP** samples, plastomes and ribosomal DNA were recovered from raw reads using `GetOrganelles` (Jin et al. 2020). In both cases, recommended parameters were used (https://github.com/Kinggerm/GetOrganelle#recipes; i.e. -R 20 -k 21,45,65,85,105 for plastomes, and -R 10 -k 35,85,115 for nuclear ribosomes). Our GetOrganelle script is in [PAFTOL_Get_Organelle](PAFTOL_Get_Organelle/)
 
 #### Public assemblies
 Validation by barcoding was also performed on transcriptomes of the **One Thousand Plant Transcriptomes Initiative** (Leebens-Mack et al. 2019), as well as from coding sequences of **Annotated Genomes** and contigs of **Unannotated Assemblies**. 
