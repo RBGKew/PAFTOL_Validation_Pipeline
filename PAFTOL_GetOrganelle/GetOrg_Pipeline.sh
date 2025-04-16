@@ -73,14 +73,14 @@ mkdir -p GetOrg; mkdir -p logs; mkdir -p fasta_pt; mkdir -p fasta_nr; mkdir -p A
 
 
 ## Launch remaining pt
-a=($(wc $sampleList)); Ns_pt=${a[0]}; echo $Ns_pt
+a=($(wc ../$sampleList)); Ns_pt=${a[0]}; echo $Ns_pt
 if (( $Ns_pt > 0 )); then
 	### Paul B changed: sbatch --array=1-${Ns_pt}%$slurmThrottle ../GetOrg_array.sh remaining_pt.txt "pt"
 	sbatch --array=1-${Ns_pt}%$slurmThrottle ../GetOrg_array.sh ../${sampleList} "pt"
 fi
 
 ## Launch remaining nr
-a=($(wc $sampleList)); Ns_nr=${a[0]}; echo $Ns_nr
+a=($(wc ../$sampleList)); Ns_nr=${a[0]}; echo $Ns_nr
 if (( $Ns_nr > 0 )); then
 	### Paul B changed: sbatch --array=1-${Ns_nr}%$slurmThrottle ../GetOrg_array.sh remaining_nr.txt "nr"
 	sbatch --array=1-${Ns_nr}%$slurmThrottle ../GetOrg_array.sh ../${sampleList} "nr"
