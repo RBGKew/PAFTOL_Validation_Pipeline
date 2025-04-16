@@ -3,7 +3,7 @@
 #SBATCH --job-name="GetOrg"
 #SBATCH --export=ALL
 #SBATCH --cpus-per-task=4
-#SBATCH --partition=all
+#SBATCH --partition=long	# Paul B. changed from all
 #SBATCH --mem=80000
 #SBATCH --ntasks=1
 ncpu=4
