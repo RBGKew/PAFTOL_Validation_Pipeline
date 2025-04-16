@@ -24,13 +24,15 @@ echo $sample
 file_path_R1="$(cut -d',' -f2 <<<"$iline")"
 file_R1=`basename "$file_path_R1"`; file_R1=${file_R1/.gz/}
 echo $file_R1
-
-
 file_path_R2="$(cut -d',' -f3 <<<"$iline")"
+
+### Paul B. checking path + filenames:
+echo "R1 full file path: " $fastqFilePath/$file_path_R1
+echo "R2 full file path: " $fastqFilePath/$file_path_R2
 
 ### Paul B. changed: if [ ! -z "$file_path_R2" ]; then - changed to -s to test whether R2 file exists, if not data is assumed to be single end.
 ###                  (applies to small amount of SRA data only to date) 
-if [ -s "$file_path_R2" ]; then
+if [ -s "$fastqFilePath/$file_path_R2" ]; then
 	file_R2=`basename "$file_path_R2"`; file_R2=${file_R2/.gz/}
 	echo $file_R2
 	
@@ -39,13 +41,13 @@ if [ -s "$file_path_R2" ]; then
 		### Paul B. - added '--overwrite 'otherwise get organelle will not run if folder already exists
 		### Paul B. - replaced Data/ with $fastqFilePath in all 6 places below to make the file location more flexible 
 		### Paul B. changed: get_organelle_from_reads.py --overwrite -1 Data/$file_R1.gz -2 Data/$file_R2.gz -o GetOrg/"$sample"_pt \
-		get_organelle_from_reads.py --overwrite -1 $fastqFilePath/$file_R1.gz -2 $fastqFilePath/$file_R2.gz -o GetOrg/"$sample"_pt \
+		get_organelle_from_reads.py --overwrite -1 $fastqFilePath/$file_path_R1 -2 $fastqFilePath/$file_path_R2 -o GetOrg/"$sample"_pt \
 		--max-reads 536870912 -R 20 -k 21,45,65,85,105 -t $ncpu -F embplant_pt --zip-files > \
 		logs/log_${sample}_pt.log 2> logs/log_${sample}_pt.err
 	elif [ $org == nr ]
 	then
 		### Paul B. changed: get_organelle_from_reads.py --overwrite -1 Data/$file_R1.gz -2 Data/$file_R2.gz -o GetOrg/"$sample"_nr \
-		get_organelle_from_reads.py --overwrite -1 $fastqFilePath/$file_R1.gz -2 $fastqFilePath/$file_R2.gz -o GetOrg/"$sample"_nr \
+		get_organelle_from_reads.py --overwrite -1 $fastqFilePath/$file_path_R1 -2 $fastqFilePath/$file_path_R2 -o GetOrg/"$sample"_nr \
 		--max-reads 536870912 -R 10 -k 35,85,115 -t $ncpu -F embplant_nr --zip-files > \
 		logs/log_${sample}_nr.log 2> logs/log_${sample}_nr.err
 	fi
@@ -57,13 +59,13 @@ else
 	then
 		# Paul B. - added '--overwrite 'otherwise get organelle will not run if folder already exists  
 		### Paul B changed: get_organelle_from_reads.py --overwrite -u Data/$file_R1.gz -o GetOrg/"$sample"_pt \
-		get_organelle_from_reads.py --overwrite -u $fastqFilePath/$file_R1.gz -o GetOrg/"$sample"_pt \
+		get_organelle_from_reads.py --overwrite -u $fastqFilePath/$file_path_R1 -o GetOrg/"$sample"_pt \
 		--max-reads 536870912 -R 20 -k 21,45,65,85,105 -t $ncpu -F embplant_pt --zip-files > \
 		logs/log_${sample}_pt.log 2> logs/log_${sample}_pt.err
 	elif [ $org == nr ]
 	then
 		### Paul B changed: get_organelle_from_reads.py --overwrite -u Data/$file_R1.gz -o GetOrg/"$sample"_nr \
-		get_organelle_from_reads.py --overwrite -u $fastqFilePath/$file_R1.gz -o GetOrg/"$sample"_nr \
+		get_organelle_from_reads.py --overwrite -u $fastqFilePath/$file_path_R1 -o GetOrg/"$sample"_nr \
 		--max-reads 536870912 -R 10 -k 35,85,115 -t $ncpu -F embplant_nr --zip-files > \
 		logs/log_${sample}_nr.log 2> logs/log_${sample}_nr.err
 	fi
