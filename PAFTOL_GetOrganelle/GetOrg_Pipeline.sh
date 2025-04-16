@@ -11,8 +11,9 @@
 ###          /mnt/shared/projects/rbgk/projects/paftol/AllData_symlinks_PAFTOL2.0  sample_list.csv
 ### Format for <sample_list>: idSequence,R1_fastq_file_name,R2_fastq_file_name
 ###
-### Note: there is now only one sample list controlling which "pt" and "nr" runs are done - hope that's OK
-
+### Note:
+### 1.There is now only one sample list controlling which "pt" and "nr" runs are done - hope that's OK
+### 2.The <paftol_export_file> is only used by GetOrg_prep.py - but leaving for now
 
 paftol_export=$1	# Paul B.: required by GetOrg_prep.py only
 DataSource=$2
