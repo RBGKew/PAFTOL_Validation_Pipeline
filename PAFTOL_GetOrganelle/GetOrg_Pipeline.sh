@@ -18,7 +18,8 @@
 paftol_export=$1	# Paul B.: required by GetOrg_prep.py only
 DataSource=$2
 fastqFilePath=$3	# Paul B. added: replaces 'Data' folder in GetOrg_array.sh lines ~37 and ~42
-sampleList=$4		# Paul B. added: for manually creating list of samples to run and their fastq file names 		
+sampleList=$4		# Paul B. added: for manually creating list of samples to run and their fastq file names
+adapterFasta=$5		# Paul B. added: for adding the adaptor file, as required (might not be supplied)	
 rem_search="fasta" # log or fasta
 slurmThrottle=5
 
@@ -76,12 +77,12 @@ mkdir -p GetOrg; mkdir -p logs; mkdir -p fasta_pt; mkdir -p fasta_nr; mkdir -p A
 a=($(wc ../$sampleList)); Ns_pt=${a[0]}; echo $Ns_pt
 if (( $Ns_pt > 0 )); then
 	### Paul B changed: sbatch --array=1-${Ns_pt}%$slurmThrottle ../GetOrg_array.sh remaining_pt.txt "pt"
-	sbatch --array=1-${Ns_pt}%$slurmThrottle ../GetOrg_array.sh ../${sampleList} "pt" $fastqFilePath
+	sbatch --array=1-${Ns_pt}%$slurmThrottle ../GetOrg_array.sh ../${sampleList} "pt" $fastqFilePath $adapterFasta
 fi
 
 ## Launch remaining nr
 a=($(wc ../$sampleList)); Ns_nr=${a[0]}; echo $Ns_nr
 if (( $Ns_nr > 0 )); then
 	### Paul B changed: sbatch --array=1-${Ns_nr}%$slurmThrottle ../GetOrg_array.sh remaining_nr.txt "nr"
-	sbatch --array=1-${Ns_nr}%$slurmThrottle ../GetOrg_array.sh ../${sampleList} "nr" $fastqFilePath
+	sbatch --array=1-${Ns_nr}%$slurmThrottle ../GetOrg_array.sh ../${sampleList} "nr" $fastqFilePath $adapterFasta
 fi
