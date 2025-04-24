@@ -59,7 +59,11 @@ if [ -s "$fastqFilePath/$file_path_R2" ]; then
 		MINLEN:40 > ${sample}_trimmomatic.log 2>&1
 		read1File=${sample}_R1_trimmomatic.fastq.gz
 		read2File=${sample}_R2_trimmomatic.fastq.gz
-		unmappedFastqFiles='-u ${sample}_R1_trimmomatic_unpaired.fastq.gz  ${sample}_R2_trimmomatic_unpaired.fastq.gz' # Ok if blank when no trimming is done
+		unmappedFastqFiles="-u ${sample}_R1_trimmomatic_unpaired.fastq.gz  ${sample}_R2_trimmomatic_unpaired.fastq.gz" # Ok if blank when no trimming is done
+		echo "Trimmed files:"
+		ls -alrt $read1File
+		ls -alrt $read2File
+		echo $unmappedFastqFiles
 	else
 		read1File=$fastqFilePath/$file_path_R1
 		read2File=$fastqFilePath/$file_path_R2
@@ -129,7 +133,7 @@ else
 	fi
 	# Delete the trimmed fastq.gz files only (NOT the original fastq files!):
 	if [[ -s ${sample}_R1_trimmomatic.fastq.gz ]]; then rm ${sample}_R1_trimmomatic.fastq.gz; fi
-	if [[ -s ${sample}_R1_R2_trimmomatic.log ]]; then rm ${sample}_R1_R2_trimmomatic.log;fi
+	if [[ -s ${sample}_R1_R2_trimmomatic.log ]]; then rm ${sample}_R1_R2_trimmomatic.log; fi
 fi
 
 python ../GetOrg_Clean.py --path GetOrg/"$sample"_"$org"/
