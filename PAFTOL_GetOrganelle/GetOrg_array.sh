@@ -3,7 +3,7 @@
 #SBATCH --job-name="GetOrg"
 #SBATCH --export=ALL
 #SBATCH --cpus-per-task=4
-#SBATCH --partition=long	# Paul B. changed from all
+#SBATCH --partition=long,himem	# Paul B. changed from all; NB - himem (gruffalo), hmem (KewHPC)
 #SBATCH --mem=80000
 #SBATCH --ntasks=1
 ncpu=4
@@ -53,10 +53,12 @@ if [ -s "$fastqFilePath/$file_path_R2" ]; then
 		${sample}_R2_trimmomatic.fastq.gz \
 		${sample}_R2_trimmomatic_unpaired.fastq.gz \
 		ILLUMINACLIP:${adapterFasta}:2:30:10:2:true \
-		LEADING:10 \
-		TRAILING:10 \
-		SLIDINGWINDOW:4:20 \
-		MINLEN:40 > ${sample}_trimmomatic.log 2>&1
+		> ${sample}_trimmomatic.log 2>&1
+		### Paul B. - also testing without quality trimming (recommended by GetOrganelle) - removed:
+		#LEADING:10 \
+		#TRAILING:10 \
+		#SLIDINGWINDOW:4:20 \
+		#MINLEN:40 
 		read1File=${sample}_R1_trimmomatic.fastq.gz
 		read2File=${sample}_R2_trimmomatic.fastq.gz
 		unmappedFastqFiles="-u ${sample}_R1_trimmomatic_unpaired.fastq.gz  ${sample}_R2_trimmomatic_unpaired.fastq.gz" # Ok if blank when no trimming is done
@@ -105,10 +107,12 @@ else
 		$fastqFilePath/$file_path_R1 \
 		${sample}_R1_trimmomatic.fastq.gz \
 		ILLUMINACLIP:${adapterFasta}:2:30:10:2:true \
-		LEADING:10 \
-		TRAILING:10 \
-		SLIDINGWINDOW:4:20 \
-		MINLEN:40 > ${sample}_trimmomatic.log 2>&1
+		> ${sample}_trimmomatic.log 2>&1
+		### Paul B. - also testing without quality trimming (recommended by GetOrganelle) - removed:
+		#LEADING:10 \
+		#TRAILING:10 \
+		#SLIDINGWINDOW:4:20 \
+		#MINLEN:40 
 		read1File=${sample}_R1_trimmomatic.fastq.gz
 	else
 		read1File=$fastqFilePath/$file_path_R1
