@@ -41,6 +41,7 @@ if [ -s "$fastqFilePath/$file_path_R2" ]; then
 	### Paul B. - added command to run read trimming but only if adaptor file is added:
 	read1File='' # for use in GetOrganelle command
 	read2File=''
+	unmappedFastqFiles=''
 	if [[ -s "${adapterFasta}" ]]; then
 		echo "Trimming PE fastq files..."
 		java -jar $TRIMMOMATIC PE \
@@ -53,15 +54,32 @@ if [ -s "$fastqFilePath/$file_path_R2" ]; then
 		${sample}_R2_trimmomatic.fastq.gz \
 		${sample}_R2_trimmomatic_unpaired.fastq.gz \
 		ILLUMINACLIP:${adapterFasta}:2:30:10:2:true \
+		MINLEN:40 \
 		> ${sample}_trimmomatic.log 2>&1
 		### Paul B. - also testing without quality trimming (recommended by GetOrganelle) - removed:
 		#LEADING:10 \
 		#TRAILING:10 \
 		#SLIDINGWINDOW:4:20 \
-		#MINLEN:40 
+		#MINLEN:40 - put back for adaptor only trimming
 		read1File=${sample}_R1_trimmomatic.fastq.gz
 		read2File=${sample}_R2_trimmomatic.fastq.gz
-		unmappedFastqFiles="-u ${sample}_R1_trimmomatic_unpaired.fastq.gz  ${sample}_R2_trimmomatic_unpaired.fastq.gz" # Ok if blank when no trimming is done
+
+		# Test that there are still unpaired fastq records present otherwise don;t add to -u option:
+		if [[ -s ${sample}_R1_trimmomatic_unpaired.fastq.gz ]]; then
+			if [[ -s ${sample}_R2_trimmomatic_unpaired.fastq.gz ]]; then
+				unmappedFastqFiles="-u ${sample}_R1_trimmomatic_unpaired.fastq.gz,${sample}_R2_trimmomatic_unpaired.fastq.gz" # Ok if variable is blank when no trimming is done
+			else
+				unmappedFastqFiles="-u ${sample}_R1_trimmomatic_unpaired.fastq.gz"
+				echo "INFO: There are unpaired reads to use after trimming by Trimmomatic in the R1 but not the R2 fastq file for sample ${sample}"
+			fi
+		elif [[ -s ${sample}_R2_trimmomatic_unpaired.fastq.gz ]]; then
+			unmappedFastqFiles="-u ${sample}_R2_trimmomatic_unpaired.fastq.gz"
+				echo "INFO: There are unpaired reads to use after trimming by Trimmomatic in the R2 but not the R1 fastq file for sample ${sample}"
+		else
+			echo "INFO: There are no unpaired reads to use after trimming by Trimmomatic in neither the R1 nor the R2 fastq file for sample ${sample}"
+		fi
+
+
 		echo "Trimmed files:"
 		ls -alrt $read1File
 		ls -alrt $read2File
@@ -107,12 +125,13 @@ else
 		$fastqFilePath/$file_path_R1 \
 		${sample}_R1_trimmomatic.fastq.gz \
 		ILLUMINACLIP:${adapterFasta}:2:30:10:2:true \
+		MINLEN:40 \
 		> ${sample}_trimmomatic.log 2>&1
 		### Paul B. - also testing without quality trimming (recommended by GetOrganelle) - removed:
 		#LEADING:10 \
 		#TRAILING:10 \
 		#SLIDINGWINDOW:4:20 \
-		#MINLEN:40 
+		#MINLEN:40 - put back for adaptor only trimming
 		read1File=${sample}_R1_trimmomatic.fastq.gz
 	else
 		read1File=$fastqFilePath/$file_path_R1
