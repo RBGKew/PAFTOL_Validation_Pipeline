@@ -63,10 +63,17 @@ if [ -s "$fastqFilePath/$file_path_R2" ]; then
 		#MINLEN:40 - put back for adaptor only trimming
 		read1File=${sample}_R1_trimmomatic.fastq.gz
 		read2File=${sample}_R2_trimmomatic.fastq.gz
+		echo "Trimmed files:"
+		ls -alrt $read1File
+		ls -alrt $read2File
+		ls -alrt ${sample}_R1_trimmomatic_unpaired.fastq.gz
+		ls -alrt ${sample}_R2_trimmomatic_unpaired.fastq.gz
 
 		# Test that there are still unpaired fastq records present otherwise don;t add to -u option:
 		if [[ -s ${sample}_R1_trimmomatic_unpaired.fastq.gz ]]; then
+			echo "INFO: ${sample}_R1_trimmomatic_unpaired.fastq.gz present"
 			if [[ -s ${sample}_R2_trimmomatic_unpaired.fastq.gz ]]; then
+				echo "INFO: ${sample}_R2_trimmomatic_unpaired.fastq.gz present"
 				unmappedFastqFiles="-u ${sample}_R1_trimmomatic_unpaired.fastq.gz,${sample}_R2_trimmomatic_unpaired.fastq.gz" # Ok if variable is blank when no trimming is done
 			else
 				unmappedFastqFiles="-u ${sample}_R1_trimmomatic_unpaired.fastq.gz"
@@ -78,11 +85,6 @@ if [ -s "$fastqFilePath/$file_path_R2" ]; then
 		else
 			echo "INFO: There are no unpaired reads to use after trimming by Trimmomatic in neither the R1 nor the R2 fastq file for sample ${sample}"
 		fi
-
-
-		echo "Trimmed files:"
-		ls -alrt $read1File
-		ls -alrt $read2File
 		echo $unmappedFastqFiles
 	else
 		read1File=$fastqFilePath/$file_path_R1
@@ -109,9 +111,10 @@ if [ -s "$fastqFilePath/$file_path_R2" ]; then
 		logs/log_${sample}_nr.log 2> logs/log_${sample}_nr.err
 	fi
 	# Delete the trimmed fastq.gz files only (NOT the original fastq files!):
-	if [[ -s ${sample}_R1_trimmomatic.fastq.gz ]]; then rm ${sample}_R1_trimmomatic.fastq.gz ${sample}_R2_trimmomatic.fastq.gz; fi
-	if [[ -s ${sample}_R1_trimmomatic_unpaired.fastq.gz ]]; then rm ${sample}_R1_trimmomatic_unpaired.fastq.gz ${sample}_R2_trimmomatic_unpaired.fastq.gz; fi
-	if [[ -s ${sample}_R1_R2_trimmomatic.log ]]; then rm ${sample}_R1_R2_trimmomatic.log;fi
+	# if [[ -s ${sample}_R1_trimmomatic.fastq.gz ]]; then rm ${sample}_R1_trimmomatic.fastq.gz ${sample}_R2_trimmomatic.fastq.gz; fi
+	# if [[ -s ${sample}_R1_trimmomatic_unpaired.fastq.gz ]]; then rm ${sample}_R1_trimmomatic_unpaired.fastq.gz ${sample}_R2_trimmomatic_unpaired.fastq.gz; fi
+	# if [[ -s ${sample}_R2_trimmomatic_unpaired.fastq.gz ]]; then rm ${sample}_R2_trimmomatic_unpaired.fastq.gz; fi
+	# if [[ -s ${sample}_R1_R2_trimmomatic.log ]]; then rm ${sample}_R1_R2_trimmomatic.log;fi
 else
 	echo "Single-end Mode"
 
