@@ -54,13 +54,11 @@ if [ -s "$fastqFilePath/$file_path_R2" ]; then
 		${sample}_R2_trimmomatic.fastq.gz \
 		${sample}_R2_trimmomatic_unpaired.fastq.gz \
 		ILLUMINACLIP:${adapterFasta}:2:30:10:2:true \
-		LEADING:10 \
-		TRAILING:10 \
 		MINLEN:40 \
 		> ${sample}_trimmomatic.log 2>&1
 		### Paul B. - also testing without quality trimming (recommended by GetOrganelle) - removed:
-		#LEADING:10 \ - put back for adaptor only trimming
-		#TRAILING:10 \ - put back for adaptor only trimming
+		#LEADING:10 \
+		#TRAILING:10 \
 		#SLIDINGWINDOW:4:20 \
 		#MINLEN:40 - put back for adaptor only trimming
 		read1File=${sample}_R1_trimmomatic.fastq.gz
@@ -113,10 +111,10 @@ if [ -s "$fastqFilePath/$file_path_R2" ]; then
 		logs/log_${sample}_nr.log 2> logs/log_${sample}_nr.err
 	fi
 	# Delete the trimmed fastq.gz files only (NOT the original fastq files!):
-	# if [[ -s ${sample}_R1_trimmomatic.fastq.gz ]]; then rm ${sample}_R1_trimmomatic.fastq.gz ${sample}_R2_trimmomatic.fastq.gz; fi
-	# if [[ -s ${sample}_R1_trimmomatic_unpaired.fastq.gz ]]; then rm ${sample}_R1_trimmomatic_unpaired.fastq.gz ${sample}_R2_trimmomatic_unpaired.fastq.gz; fi
-	# if [[ -s ${sample}_R2_trimmomatic_unpaired.fastq.gz ]]; then rm ${sample}_R2_trimmomatic_unpaired.fastq.gz; fi
-	# if [[ -s ${sample}_R1_R2_trimmomatic.log ]]; then rm ${sample}_R1_R2_trimmomatic.log;fi
+	if [[ -s ${sample}_R1_trimmomatic.fastq.gz ]]; then rm ${sample}_R1_trimmomatic.fastq.gz ${sample}_R2_trimmomatic.fastq.gz; fi
+	if [[ -s ${sample}_R1_trimmomatic_unpaired.fastq.gz ]]; then rm ${sample}_R1_trimmomatic_unpaired.fastq.gz ${sample}_R2_trimmomatic_unpaired.fastq.gz; fi
+	if [[ -s ${sample}_R2_trimmomatic_unpaired.fastq.gz ]]; then rm ${sample}_R2_trimmomatic_unpaired.fastq.gz; fi
+	if [[ -s ${sample}_R1_R2_trimmomatic.log ]]; then rm ${sample}_R1_R2_trimmomatic.log;fi
 else
 	echo "Single-end Mode"
 
@@ -130,13 +128,11 @@ else
 		$fastqFilePath/$file_path_R1 \
 		${sample}_R1_trimmomatic.fastq.gz \
 		ILLUMINACLIP:${adapterFasta}:2:30:10:2:true \
-		LEADING:10 \
-		TRAILING:10 \
 		MINLEN:40 \
 		> ${sample}_trimmomatic.log 2>&1
 		### Paul B. - also testing without quality trimming (recommended by GetOrganelle) - removed:
-		#LEADING:10 \ - put back for adaptor only trimming
-		#TRAILING:10 \ - put back for adaptor only trimming
+		#LEADING:10 \
+		#TRAILING:10 \
 		#SLIDINGWINDOW:4:20 \
 		#MINLEN:40 \ - put back for adaptor only trimming
 		read1File=${sample}_R1_trimmomatic.fastq.gz
