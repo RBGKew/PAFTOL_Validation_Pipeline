@@ -54,11 +54,13 @@ if [ -s "$fastqFilePath/$file_path_R2" ]; then
 		${sample}_R2_trimmomatic.fastq.gz \
 		${sample}_R2_trimmomatic_unpaired.fastq.gz \
 		ILLUMINACLIP:${adapterFasta}:2:30:10:2:true \
+		LEADING:10 \
+		TRAILING:10 \
 		MINLEN:40 \
 		> ${sample}_trimmomatic.log 2>&1
 		### Paul B. - also testing without quality trimming (recommended by GetOrganelle) - removed:
-		#LEADING:10 \
-		#TRAILING:10 \
+		#LEADING:10 \ - put back for adaptor only trimming
+		#TRAILING:10 \ - put back for adaptor only trimming
 		#SLIDINGWINDOW:4:20 \
 		#MINLEN:40 - put back for adaptor only trimming
 		read1File=${sample}_R1_trimmomatic.fastq.gz
@@ -128,11 +130,13 @@ else
 		$fastqFilePath/$file_path_R1 \
 		${sample}_R1_trimmomatic.fastq.gz \
 		ILLUMINACLIP:${adapterFasta}:2:30:10:2:true \
+		LEADING:10 \
+		TRAILING:10 \
 		MINLEN:40 \
 		> ${sample}_trimmomatic.log 2>&1
 		### Paul B. - also testing without quality trimming (recommended by GetOrganelle) - removed:
-		#LEADING:10 \
-		#TRAILING:10 \
+		#LEADING:10 \ - put back for adaptor only trimming
+		#TRAILING:10 \ - put back for adaptor only trimming
 		#SLIDINGWINDOW:4:20 \
 		#MINLEN:40 \ - put back for adaptor only trimming
 		read1File=${sample}_R1_trimmomatic.fastq.gz
