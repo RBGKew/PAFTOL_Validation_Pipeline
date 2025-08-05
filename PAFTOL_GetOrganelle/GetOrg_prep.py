@@ -17,162 +17,172 @@ import argparse
 
 # In[2]:
 
+def main():
+    ## Parameters
+    parser = argparse.ArgumentParser(
+        description='Blast sample sequences on Barcode database and process the results')
+    parser.add_argument("--db", type=str, help="latest paftol_export")
+    parser.add_argument("--DataSource", type=str, help="DataSource (e.g. PAFTOL, SRA)")
+    parser.add_argument("--rem_search", type=str, help="List completed samples if fasta or log exist")
+    args = parser.parse_args()
 
-## Parameters
-parser = argparse.ArgumentParser(
-    description='Blast sample sequences on Barcode database and process the results')
-parser.add_argument("--db", type=str, help="latest paftol_export")
-parser.add_argument("--DataSource", type=str, help="DataSource (e.g. PAFTOL, SRA)")
-parser.add_argument("--rem_search", type=str, help="List completed samples if fasta or log exist")
-args = parser.parse_args()
+    export_file = args.db
+    DataSource = args.DataSource
+    rem_search = args.rem_search
 
-export_file = args.db
-DataSource = args.DataSource
-rem_search = args.rem_search
+    # Load export for datasource
+    db = pd.read_csv(export_file)
+    db = db[(db.DataSource==DataSource) & (db.R1FastqFile.notnull())]
 
-
-# In[3]:
-
-
-# # For notebook only
-# export_file = '../PAFTOL_DB/2021-07-27_paftol_export.csv'
-# DataSource = 'GAP'
-# rem_search = 'log'
+    db = add_fastq_files_paths(db, DataSource)
+    db = flag_existing_recoveries(db, DataSource)
+    db = add_past_recoveries_metadata_from_logs(db, DataSource)
+    todo_pt, todo_nr = get_input_files_for_missing_recoveries(db, DataSource, rem_search)
+    todo_pt, todo_nr = check_if_fastq_files_exists(db, DataSource)
+    save_recovery_pipeline_input_accessions_files(todo_pt, todo_nr)
+    print("Done: prepared input files with accessions for recovery pipeline.")
 
 
-# In[4]:
+def add_fastq_files_paths(db, DataSource):
+    if DataSource == 'PAFTOL':
+        # Paul B. - modified path to process PAFTOL2.0 data
+        #fastq_path = '/science/projects/paftol/AllData_symlinks/'
+        fastq_path = '/science/projects/paftol/AllData_symlinks_PAFTOL2.0/'
+        db['Sample_Name'] = 'PAFTOL_' + db['idSequencing'].astype(int).astype('str').str.zfill(6)
+        db['R1_path'] = fastq_path + db.Sample_Name + '_R1.fastq.gz'
+        db['R2_path'] = fastq_path + db.Sample_Name + '_R2.fastq.gz'
+    elif DataSource == 'GAP':
+        fastq_path = '/science/projects/paftol/AllData_symlinks/'
+        db['Sample_Name'] = 'GAP_' + db['idSequencing'].astype(int).astype('str').str.zfill(6)
+        db['R1_path'] = fastq_path + db.Sample_Name + '_R1.fastq.gz'
+        db['R2_path'] = fastq_path + db.Sample_Name + '_R2.fastq.gz'
+    elif DataSource == 'SRA':
+        # Paul B. - modified path to process SRA data from these subsets: paftol/SRA_from_ARZ/new_SRA_batch_2/SP014[678]
+        fastq_path = '/data/projects/paftol/SRA_Data/'
+        #fastq_path = '/data/projects/paftol/new_data_ARZ_Jan22/SP0147/'
+        db['Sample_Name'] = db.ExternalSequenceID
+        db['R1_path'] = fastq_path + db.R1FastqFile
+        db['R2_path'] = fastq_path + db.R2FastqFile
+    else:
+        print('unknown action for',DataSource)
+        sys.exit()
+    print(db.shape[0],'samples in total')
+    return db
 
-
-# Load export for datasource
-db = pd.read_csv(export_file)
-db = db[(db.DataSource==DataSource) & (db.R1FastqFile.notnull())]
-if DataSource == 'PAFTOL':
-    # Paul B. - modified path to process PAFTOL2.0 data
-    #fastq_path = '/science/projects/paftol/AllData_symlinks/'
-    fastq_path = '/science/projects/paftol/AllData_symlinks_PAFTOL2.0/'
-    db['Sample_Name'] = 'PAFTOL_' + db['idSequencing'].astype(int).astype('str').str.zfill(6)
-    db['R1_path'] = fastq_path + db.Sample_Name + '_R1.fastq.gz'
-    db['R2_path'] = fastq_path + db.Sample_Name + '_R2.fastq.gz'
-elif DataSource == 'GAP':
-    fastq_path = '/science/projects/paftol/AllData_symlinks/'
-    db['Sample_Name'] = 'GAP_' + db['idSequencing'].astype(int).astype('str').str.zfill(6)
-    db['R1_path'] = fastq_path + db.Sample_Name + '_R1.fastq.gz'
-    db['R2_path'] = fastq_path + db.Sample_Name + '_R2.fastq.gz'
-elif DataSource == 'SRA':
-    # Paul B. - modified path to process SRA data from these subsets: paftol/SRA_from_ARZ/new_SRA_batch_2/SP014[678]
-    fastq_path = '/data/projects/paftol/SRA_Data/'
-    #fastq_path = '/data/projects/paftol/new_data_ARZ_Jan22/SP0147/'
-    db['Sample_Name'] = db.ExternalSequenceID
-    db['R1_path'] = fastq_path + db.R1FastqFile
-    db['R2_path'] = fastq_path + db.R2FastqFile
-else:
-    print('unknown action for',DataSource)
-    sys.exit()
-
-print(db.shape[0],'samples in total')
 
 
 # In[5]:
 
 
-# List fasta_pt and fasta_nr
-db['fasta_pt']=False; db['fasta_nr']=False;
-fasta_pt = pd.DataFrame(os.listdir(DataSource + '/fasta_pt/'),columns=['file'])
-if fasta_pt.shape[0]>0:
-    fasta_pt['Sample_Name'] = fasta_pt.file.str.split('_pt',expand=True)[0]
-    db['fasta_pt']=db.Sample_Name.isin(fasta_pt.Sample_Name)
-fasta_nr = pd.DataFrame(os.listdir(DataSource + '/fasta_nr/'),columns=['file'])
-if fasta_nr.shape[0]>0:
-    fasta_nr['Sample_Name'] = fasta_nr.file.str.split('_nr',expand=True)[0]
-    db['fasta_nr']=db.Sample_Name.isin(fasta_nr.Sample_Name)
-print(db.fasta_pt.sum(),'/',db.shape[0],'pt recovered')
-print(db.fasta_nr.sum(),'/',db.shape[0],'nr recovered')
+def flag_existing_recoveries(db, DataSource):
+    """
+    List fasta_pt and fasta_nr
+    """
+    db['fasta_pt']=False; db['fasta_nr']=False;
+    fasta_pt = pd.DataFrame(os.listdir(DataSource + '/fasta_pt/'),columns=['file'])
+    if fasta_pt.shape[0]>0:
+        fasta_pt['Sample_Name'] = fasta_pt.file.str.split('_pt',expand=True)[0]
+        db['fasta_pt']=db.Sample_Name.isin(fasta_pt.Sample_Name)
+    fasta_nr = pd.DataFrame(os.listdir(DataSource + '/fasta_nr/'),columns=['file'])
+    if fasta_nr.shape[0]>0:
+        fasta_nr['Sample_Name'] = fasta_nr.file.str.split('_nr',expand=True)[0]
+        db['fasta_nr']=db.Sample_Name.isin(fasta_nr.Sample_Name)
+    print(db.fasta_pt.sum(),'/',db.shape[0],'pt recovered')
+    print(db.fasta_nr.sum(),'/',db.shape[0],'nr recovered')
+    return db
 
 
 # In[6]:
 
 
 # Check logs
-db['log_pt']=False; db['log_nr']=False;
-logs_df = pd.DataFrame(os.listdir(DataSource + '/logs/'),columns=['file'])
-if logs_df.shape[0]>0:
-    logs_df['Sample_Name'] = logs_df.file.str.split('log_',expand=True)[1]
-    logs_df['Type'] = logs_df.Sample_Name.str.split('.',expand=True)[1]
-    logs_df['Sample_Name'] = logs_df.Sample_Name.str.split('.',expand=True)[0]
-    logs_df['Organelle'] = logs_df.Sample_Name.str.split('_').str[-1]
-    logs_df['Sample_Name'] = logs_df.Sample_Name.str.replace('_nr','').str.replace('_pt','')
-    logs_df['filesize']=logs_df.file.apply(lambda x: os.stat(DataSource + '/logs/' + x).st_size)
-    db['log_pt']=db.Sample_Name.isin(logs_df[(logs_df.Type=='log') & (logs_df.Organelle=='pt')]['Sample_Name'])
-    db['log_nr']=db.Sample_Name.isin(logs_df[(logs_df.Type=='log') & (logs_df.Organelle=='nr')]['Sample_Name'])
-print(db.log_pt.sum(),'/',db.shape[0],'pt processed')
-print(db.log_nr.sum(),'/',db.shape[0],'nr processed')
-if logs_df.shape[0]>0:
-    db['error_pt']=pd.merge(db, logs_df[(logs_df.Type=='err') & (logs_df.Organelle=='pt')]).filesize > 0
-    db['error_nr']=pd.merge(db, logs_df[(logs_df.Type=='err') & (logs_df.Organelle=='nr')]).filesize > 0
-    print(db.error_pt.sum(),'/',db.shape[0],'error during pt recovery')
-    print(db.error_nr.sum(),'/',db.shape[0],'error during nr recovery')
 
+def add_past_recoveries_metadata_from_logs(db, DataSource):
+    db['log_pt']=False; db['log_nr']=False;
+    logs_df = pd.DataFrame(os.listdir(DataSource + '/logs/'),columns=['file'])
+    if logs_df.shape[0]>0:
+        logs_df['Sample_Name'] = logs_df.file.str.split('log_',expand=True)[1]
+        logs_df['Type'] = logs_df.Sample_Name.str.split('.',expand=True)[1]
+        logs_df['Sample_Name'] = logs_df.Sample_Name.str.split('.',expand=True)[0]
+        logs_df['Organelle'] = logs_df.Sample_Name.str.split('_').str[-1]
+        logs_df['Sample_Name'] = logs_df.Sample_Name.str.replace('_nr','').str.replace('_pt','')
+        logs_df['filesize']=logs_df.file.apply(lambda x: os.stat(DataSource + '/logs/' + x).st_size)
+        db['log_pt']=db.Sample_Name.isin(logs_df[(logs_df.Type=='log') & (logs_df.Organelle=='pt')]['Sample_Name'])
+        db['log_nr']=db.Sample_Name.isin(logs_df[(logs_df.Type=='log') & (logs_df.Organelle=='nr')]['Sample_Name'])
+    print(db.log_pt.sum(),'/',db.shape[0],'pt processed')
+    print(db.log_nr.sum(),'/',db.shape[0],'nr processed')
+    if logs_df.shape[0]>0:
+        db['error_pt']=pd.merge(db, logs_df[(logs_df.Type=='err') & (logs_df.Organelle=='pt')]).filesize > 0
+        db['error_nr']=pd.merge(db, logs_df[(logs_df.Type=='err') & (logs_df.Organelle=='nr')]).filesize > 0
+        print(db.error_pt.sum(),'/',db.shape[0],'error during pt recovery')
+        print(db.error_nr.sum(),'/',db.shape[0],'error during nr recovery')
+    return db
 
-# In[7]:
-
-
-if rem_search == 'fasta':
-    todo_pt = db[(db.fasta_pt==False)][['Sample_Name','R1_path','R2_path']]
-    todo_nr = db[(db.fasta_nr==False)][['Sample_Name','R1_path','R2_path']]
-elif rem_search == 'log':
-    todo_pt = db[(db.log_pt==False)][['Sample_Name','R1_path','R2_path']]
-    todo_nr = db[(db.log_nr==False)][['Sample_Name','R1_path','R2_path']]
-if todo_pt.shape[0]>0:
-    print('\n',todo_pt.shape[0],DataSource,'samples listed for pt recovery')
-if todo_nr.shape[0]>0:
-    print('\n',todo_nr.shape[0],DataSource,'samples listed for nr recovery')
 
 
 # In[ ]:
 
-
-if todo_pt.shape[0]>0:
-    for idx, row in todo_pt.iterrows():
-#         print(row['R1_path'],end=':'); print(os.path.exists(row['R1_path']))
-        todo_pt.loc[idx,'R1_exist'] = os.path.exists( str(row['R1_path']) )
-        if os.path.exists( str(row['R1_path']) ):
-            todo_pt.loc[idx,'R1_size'] = os.stat( str(row['R1_path']) ).st_size
-#         print(row['R2_path'],end=':'); print(os.path.exists( str(row['R2_path']) ))
-        todo_pt.loc[idx,'R2_exist'] = os.path.exists( str(row['R2_path']) )
-# Paul B. added - sort by file size
-todo_pt = todo_pt.sort_values(by='R1_size')
-pd.set_option('display.max_rows', len(todo_pt)) # -->  pd.reset_option('display.max_rows')
-print(todo_pt[['Sample_Name','R1_size']])
-### Paul B. - trying to accept single-end data also for SRA samples)
-# todo_pt = todo_pt[(todo_pt.R1_exist) & (todo_pt.R2_exist)]
-todo_pt = todo_pt[ ( (todo_pt.R1_exist) & (todo_pt.R2_exist) ) | ( todo_pt.R1_exist & todo_pt.R2_exist.isnull() ) ]
-if todo_pt.shape[0]>0:
-    #print(todo_pt.shape[0],'paired-end fastq files found')
-    print(todo_pt.shape[0],'paired-end or single-end fastq files found')
-    todo_pt[['Sample_Name','R1_path','R2_path']].to_csv(DataSource + '/remaining_pt.txt',index=False,header=None)
-else:
-    print('no fastq file found or no sample to process, remaining list not written')
-
-if todo_nr.shape[0]>0:
-    for idx, row in todo_nr.iterrows():
-#         print(row['R1_path'],end=':'); print(os.path.exists( str(row['R1_path']) )
-        todo_nr.loc[idx,'R1_exist'] = os.path.exists( str(row['R1_path']) )
-        if os.path.exists( str(row['R1_path']) ):
-            todo_nr.loc[idx,'R1_size'] = os.stat( str(row['R1_path']) ).st_size
-#         print(row['R2_path'],end=':'); print(os.path.exists( str(row['R2_path']))
-        todo_nr.loc[idx,'R2_exist'] = os.path.exists( str(row['R2_path']) )
-# Paul B. added - sort by file size
-todo_nr = todo_nr.sort_values(by='R1_size')
-#todo_nr = todo_nr[(todo_nr.R1_exist) & (todo_nr.R2_exist)]
-todo_nr = todo_nr[ ((todo_nr.R1_exist) & (todo_nr.R2_exist)) | (todo_nr.R1_exist & todo_nr.R2_exist.isnull()) ]
-if todo_nr.shape[0]>0:
-    #print(todo_nr.shape[0],'paired-end fastq files found')
-    print(todo_nr.shape[0],'paired-end or single-end fastq files found')
-    todo_nr[['Sample_Name','R1_path','R2_path']].to_csv(DataSource + '/remaining_nr.txt',index=False,header=None)
-else:
-    print('no fastq file found or no sample to process, remaining list not written')
+def get_input_files_for_missing_recoveries(db, DataSource, rem_search):
+    # TODO: use function for each data type instead of repeating code
+    if rem_search == 'fasta':
+        todo_pt = db[(db.fasta_pt==False)][['Sample_Name','R1_path','R2_path']]
+        todo_nr = db[(db.fasta_nr==False)][['Sample_Name','R1_path','R2_path']]
+    elif rem_search == 'log':
+        todo_pt = db[(db.log_pt==False)][['Sample_Name','R1_path','R2_path']]
+        todo_nr = db[(db.log_nr==False)][['Sample_Name','R1_path','R2_path']]
+    if todo_pt.shape[0]>0:
+        print('\n',todo_pt.shape[0],DataSource,'samples listed for pt recovery')
+    if todo_nr.shape[0]>0:
+        print('\n',todo_nr.shape[0],DataSource,'samples listed for nr recovery')
+    return todo_pt, todo_nr
 
 
+
+def check_if_fastq_files_exists(todo_pt, todo_nr):
+    # TODO: use function for each data type instead of repeating code
+    if todo_pt.shape[0]>0:
+        for idx, row in todo_pt.iterrows():
+    #         print(row['R1_path'],end=':'); print(os.path.exists(row['R1_path']))
+            todo_pt.loc[idx,'R1_exist'] = os.path.exists( str(row['R1_path']) )
+            if os.path.exists( str(row['R1_path']) ):
+                todo_pt.loc[idx,'R1_size'] = os.stat( str(row['R1_path']) ).st_size
+    #         print(row['R2_path'],end=':'); print(os.path.exists( str(row['R2_path']) ))
+            todo_pt.loc[idx,'R2_exist'] = os.path.exists( str(row['R2_path']) )
+    # Paul B. added - sort by file size
+    todo_pt = todo_pt.sort_values(by='R1_size')
+    pd.set_option('display.max_rows', len(todo_pt)) # -->  pd.reset_option('display.max_rows')
+    print(todo_pt[['Sample_Name','R1_size']])
+    ### Paul B. - trying to accept single-end data also for SRA samples)
+    # todo_pt = todo_pt[(todo_pt.R1_exist) & (todo_pt.R2_exist)]
+    todo_pt = todo_pt[ ( (todo_pt.R1_exist) & (todo_pt.R2_exist) ) | ( todo_pt.R1_exist & todo_pt.R2_exist.isnull() ) ]
+
+    if todo_nr.shape[0]>0:
+        for idx, row in todo_nr.iterrows():
+    #         print(row['R1_path'],end=':'); print(os.path.exists( str(row['R1_path']) )
+            todo_nr.loc[idx,'R1_exist'] = os.path.exists( str(row['R1_path']) )
+            if os.path.exists( str(row['R1_path']) ):
+                todo_nr.loc[idx,'R1_size'] = os.stat( str(row['R1_path']) ).st_size
+    #         print(row['R2_path'],end=':'); print(os.path.exists( str(row['R2_path']))
+            todo_nr.loc[idx,'R2_exist'] = os.path.exists( str(row['R2_path']) )
+    # Paul B. added - sort by file size
+    todo_nr = todo_nr.sort_values(by='R1_size')
+    #todo_nr = todo_nr[(todo_nr.R1_exist) & (todo_nr.R2_exist)]
+    todo_nr = todo_nr[ ((todo_nr.R1_exist) & (todo_nr.R2_exist)) | (todo_nr.R1_exist & todo_nr.R2_exist.isnull()) ]
+    return todo_pt, todo_nr
+
+def save_recovery_pipeline_input_accessions_files(todo_pt, todo_nr):
+    if todo_pt.shape[0]>0:
+        #print(todo_pt.shape[0],'paired-end fastq files found')
+        print(todo_pt.shape[0],'paired-end or single-end fastq files found')
+        todo_pt[['Sample_Name','R1_path','R2_path']].to_csv(DataSource + '/remaining_pt.txt',index=False,header=None)
+    else:
+        print('no fastq file found or no sample to process, remaining list not written')
+    if todo_nr.shape[0]>0:
+        #print(todo_nr.shape[0],'paired-end fastq files found')
+        print(todo_nr.shape[0],'paired-end or single-end fastq files found')
+        todo_nr[['Sample_Name','R1_path','R2_path']].to_csv(DataSource + '/remaining_nr.txt',index=False,header=None)
+    else:
+        print('no fastq file found or no sample to process, remaining list not written')
 # In[ ]:
 
 
@@ -194,3 +204,5 @@ else:
 #     print(todo_nr.shape[0],'paired-end fastq files found')
 #     todo_nr[['Sample_Name','R1_path','R2_path']].to_csv(DataSource + '/remaining_nr.txt',index=False,header=None)
 
+if __name__ == "__main__":
+    main()
