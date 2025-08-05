@@ -7,15 +7,11 @@
 # Copyright © 2020 The Board of Trustees of the Royal Botanic Gardens, Kew
 ##################################
 
-# In[1]:
-
-
 import pandas as pd
 import os; import sys
 import argparse
+from pathlib import Path
 
-
-# In[2]:
 
 def main():
     ## Parameters
@@ -44,6 +40,7 @@ def main():
 
 
 def add_fastq_files_paths(db, DataSource):
+    # TODO: allow input fastq path. They remain hard coded to avoid modifiying GetOrg_Pipeline.sh now
     if DataSource == 'PAFTOL':
         # Paul B. - modified path to process PAFTOL2.0 data
         #fastq_path = '/science/projects/paftol/AllData_symlinks/'
@@ -58,8 +55,16 @@ def add_fastq_files_paths(db, DataSource):
         db['R2_path'] = fastq_path + db.Sample_Name + '_R2.fastq.gz'
     elif DataSource == 'SRA':
         # Paul B. - modified path to process SRA data from these subsets: paftol/SRA_from_ARZ/new_SRA_batch_2/SP014[678]
-        fastq_path = '/data/projects/paftol/SRA_Data/'
         #fastq_path = '/data/projects/paftol/new_data_ARZ_Jan22/SP0147/'
+        fastq_path_hpc_1 = Path('/data/projects/paftol/SRA_Data')
+        fastq_path_hpc_2 = Path('/mnt/shared/projects/rbgk/projects/paftol/PublicData/PAFTOL2/RawData/AllSymlinks')
+        if fastq_path_hpc_1.exists():
+            fastq_path = fastq_path_hpc_1
+        elif fastq_path_hpc_2.exists():
+            fastq_path = fastq_path_hpc_2
+        else:
+            print(f"[ERROR] No valid fastq path found for {DataSource}. Review values in GetOrg_prep.py.")
+            sys.exit(1)
         db['Sample_Name'] = db.ExternalSequenceID
         db['R1_path'] = fastq_path + db.R1FastqFile
         db['R2_path'] = fastq_path + db.R2FastqFile
