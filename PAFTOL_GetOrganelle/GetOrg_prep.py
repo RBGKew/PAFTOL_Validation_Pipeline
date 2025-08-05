@@ -70,10 +70,6 @@ def add_fastq_files_paths(db, DataSource):
     return db
 
 
-
-# In[5]:
-
-
 def flag_existing_recoveries(db, DataSource):
     """
     List fasta_pt and fasta_nr
@@ -91,11 +87,6 @@ def flag_existing_recoveries(db, DataSource):
     print(db.fasta_nr.sum(),'/',db.shape[0],'nr recovered')
     return db
 
-
-# In[6]:
-
-
-# Check logs
 
 def add_past_recoveries_metadata_from_logs(db, DataSource):
     db['log_pt']=False; db['log_nr']=False;
@@ -119,9 +110,6 @@ def add_past_recoveries_metadata_from_logs(db, DataSource):
     return db
 
 
-
-# In[ ]:
-
 def get_input_files_for_missing_recoveries(db, DataSource, rem_search):
     # TODO: use function for each data type instead of repeating code
     if rem_search == 'fasta':
@@ -135,7 +123,6 @@ def get_input_files_for_missing_recoveries(db, DataSource, rem_search):
     if todo_nr.shape[0]>0:
         print('\n',todo_nr.shape[0],DataSource,'samples listed for nr recovery')
     return todo_pt, todo_nr
-
 
 
 def check_if_fastq_files_exists(todo_pt, todo_nr):
@@ -170,6 +157,7 @@ def check_if_fastq_files_exists(todo_pt, todo_nr):
     todo_nr = todo_nr[ ((todo_nr.R1_exist) & (todo_nr.R2_exist)) | (todo_nr.R1_exist & todo_nr.R2_exist.isnull()) ]
     return todo_pt, todo_nr
 
+
 def save_recovery_pipeline_input_accessions_files(todo_pt, todo_nr):
     if todo_pt.shape[0]>0:
         #print(todo_pt.shape[0],'paired-end fastq files found')
@@ -183,8 +171,6 @@ def save_recovery_pipeline_input_accessions_files(todo_pt, todo_nr):
         todo_nr[['Sample_Name','R1_path','R2_path']].to_csv(DataSource + '/remaining_nr.txt',index=False,header=None)
     else:
         print('no fastq file found or no sample to process, remaining list not written')
-# In[ ]:
-
 
 # if todo_pt.shape[0]>0:
 #     todo_pt['R1_exist'] = todo_pt.apply(lambda row: os.path.exists(row['R1_path']),axis=1)
