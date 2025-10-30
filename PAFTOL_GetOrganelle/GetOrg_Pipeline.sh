@@ -77,12 +77,14 @@ mkdir -p GetOrg; mkdir -p logs; mkdir -p fasta_pt; mkdir -p fasta_nr; mkdir -p A
 a=($(wc ../$sampleList)); Ns_pt=${a[0]}; echo $Ns_pt
 if (( $Ns_pt > 0 )); then
 	### Paul B changed: sbatch --array=1-${Ns_pt}%$slurmThrottle ../GetOrg_array.sh remaining_pt.txt "pt"
-	sbatch --array=1-${Ns_pt}%$slurmThrottle ../GetOrg_array.sh ../${sampleList} "pt" $fastqFilePath $adapterFasta
+	jobInfo=`sbatch --array=1-${Ns_pt}%$slurmThrottle ../GetOrg_array.sh ../${sampleList} "pt" $fastqFilePath $adapterFasta `
+	$jobInfo
+	jobId=`echo $jobInfo | cut -d ' ' -f 4 `
 fi
 
 ## Launch remaining nr
 a=($(wc ../$sampleList)); Ns_nr=${a[0]}; echo $Ns_nr
 if (( $Ns_nr > 0 )); then
 	### Paul B changed: sbatch --array=1-${Ns_nr}%$slurmThrottle ../GetOrg_array.sh remaining_nr.txt "nr"
-	sbatch --array=1-${Ns_nr}%$slurmThrottle ../GetOrg_array.sh ../${sampleList} "nr" $fastqFilePath $adapterFasta
+	sbatch --dependency=afterany:$jobId --array=1-${Ns_nr}%$slurmThrottle ../GetOrg_array.sh ../${sampleList} "nr" $fastqFilePath $adapterFasta
 fi
