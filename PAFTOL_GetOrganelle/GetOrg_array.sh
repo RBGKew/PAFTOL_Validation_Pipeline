@@ -115,10 +115,10 @@ if [ -s "$fastqFilePath/$file_path_R2" ]; then
 		logs/log_${sample}_nr.log 2> logs/log_${sample}_nr.err
 	fi
 	# Delete the trimmed fastq.gz files only (NOT the original fastq files!):
-	if [[ -s ${sample}_R1_trimmomatic.fastq.gz ]]; then rm ${sample}_R1_trimmomatic.fastq.gz ${sample}_R2_trimmomatic.fastq.gz; fi
-	if [[ -s ${sample}_R1_trimmomatic_unpaired.fastq.gz ]]; then rm ${sample}_R1_trimmomatic_unpaired.fastq.gz ${sample}_R2_trimmomatic_unpaired.fastq.gz; fi
-	if [[ -s ${sample}_R2_trimmomatic_unpaired.fastq.gz ]]; then rm ${sample}_R2_trimmomatic_unpaired.fastq.gz; fi
-	if [[ -s ${sample}_R1_R2_trimmomatic.log ]]; then rm ${sample}_R1_R2_trimmomatic.log;fi
+	if [[ -s ${sample}_R1_trimmomatic.fastq.gz ]]; then rm -rf ${sample}_R1_trimmomatic.fastq.gz ${sample}_R2_trimmomatic.fastq.gz; fi
+	if [[ -s ${sample}_R1_trimmomatic_unpaired.fastq.gz ]]; then rm -rf ${sample}_R1_trimmomatic_unpaired.fastq.gz ${sample}_R2_trimmomatic_unpaired.fastq.gz; fi
+	if [[ -s ${sample}_R2_trimmomatic_unpaired.fastq.gz ]]; then rm -rf ${sample}_R2_trimmomatic_unpaired.fastq.gz; fi
+	if [[ -s ${sample}_R1_R2_trimmomatic.log ]]; then rm -rf ${sample}_R1_R2_trimmomatic.log;fi
 else
 	echo "Single-end Mode"
 
