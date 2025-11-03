@@ -30,7 +30,8 @@ def main():
 
     # Load export for datasource
     db = pd.read_csv(export_file)
-    db = db[(db.DataSource==DataSource) & (db.R1FastqFile.notnull())]
+    db = db[(db.DataSource==DataSource)]
+    print("PAFTOL export loaded.\n")
 
     db = add_fastq_files_paths(db, DataSource)
     db = flag_existing_recoveries(db, DataSource)
