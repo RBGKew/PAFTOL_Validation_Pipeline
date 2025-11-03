@@ -29,6 +29,18 @@ slurmThrottle=5
 # Paul B. removed: rm -f $DataSource/remaining_pt.txt
 # Paul B. removed: rm -f $DataSource/remaining_nr.txt;
 # Paul B. removed: python GetOrg_prep.py --db $paftol_export --DataSource $DataSource --rem_search $rem_search
+if [[ " $@ " =~ " --skip-prep " ]]; then
+    skip_prep=1
+else
+    skip_prep=0
+fi
+
+if (( skip_prep )); then
+    echo "[INFO] Skipping GetOrg_prep.py step."
+else
+    echo "[INFO] Running GetOrg_prep.py..."
+    python3 GetOrg_prep.py --db $paftol_export --DataSource $DataSource --src_path $fastqFilePath --rem_search $rem_search
+fi
 
 
 ## Go to dir and create working directories
