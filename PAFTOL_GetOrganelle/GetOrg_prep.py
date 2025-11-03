@@ -42,38 +42,26 @@ def main():
     print("Done: prepared input files with accessions for recovery pipeline.")
 
 
-def add_fastq_files_paths(db, DataSource):
-    # TODO: allow input fastq path. They remain hard coded to avoid modifiying GetOrg_Pipeline.sh now
+def add_fastq_files_paths(db, DataSource, src_path):
+    """
+    Add Sample_Name, R1_path, and R2_path columns to db based on the DataSource.
+    DataSource can be 'PAFTOL', 'GAP', or 'SRA'.
+    """
+    fastq_path = src_path
     if DataSource == 'PAFTOL':
-        # Paul B. - modified path to process PAFTOL2.0 data
-        #fastq_path = '/science/projects/paftol/AllData_symlinks/'
-        fastq_path = '/science/projects/paftol/AllData_symlinks_PAFTOL2.0/'
-        db['Sample_Name'] = 'PAFTOL_' + db['idSequencing'].astype(int).astype('str').str.zfill(6)
-        db['R1_path'] = fastq_path + db.Sample_Name + '_R1.fastq.gz'
-        db['R2_path'] = fastq_path + db.Sample_Name + '_R2.fastq.gz'
+        db['Sample_Name'] = 'PAFTOL_' + db['idSequence'].astype(int).astype('str').str.zfill(6)
+        fastq_suffix = "R"
     elif DataSource == 'GAP':
-        fastq_path = '/science/projects/paftol/AllData_symlinks/'
-        db['Sample_Name'] = 'GAP_' + db['idSequencing'].astype(int).astype('str').str.zfill(6)
-        db['R1_path'] = fastq_path + db.Sample_Name + '_R1.fastq.gz'
-        db['R2_path'] = fastq_path + db.Sample_Name + '_R2.fastq.gz'
+        db['Sample_Name'] = 'GAP_' + db['idSequence'].astype(int).astype('str').str.zfill(6)
+        fastq_suffix = "R"
     elif DataSource == 'SRA':
-        # Paul B. - modified path to process SRA data from these subsets: paftol/SRA_from_ARZ/new_SRA_batch_2/SP014[678]
-        #fastq_path = '/data/projects/paftol/new_data_ARZ_Jan22/SP0147/'
-        fastq_path_hpc_1 = Path('/data/projects/paftol/SRA_Data')
-        fastq_path_hpc_2 = Path('/mnt/shared/projects/rbgk/projects/paftol/PublicData/PAFTOL2/RawData/AllSymlinks')
-        if fastq_path_hpc_1.exists():
-            fastq_path = fastq_path_hpc_1
-        elif fastq_path_hpc_2.exists():
-            fastq_path = fastq_path_hpc_2
-        else:
-            print(f"[ERROR] No valid fastq path found for {DataSource}. Review values in GetOrg_prep.py.")
-            sys.exit(1)
-        db['Sample_Name'] = db.ExternalSequenceID
-        db['R1_path'] = fastq_path + db.R1FastqFile
-        db['R2_path'] = fastq_path + db.R2FastqFile
+        db['Sample_Name'] = db['ExternalSequenceID']
+        fastq_suffix = ""
     else:
         print('unknown action for',DataSource)
         sys.exit()
+    db["R1_path"] = db['Sample_Name'].apply(lambda x: fastq_path / f"{x}_{fastq_suffix}1.fastq.gz")
+    db["R2_path"] = db['Sample_Name'].apply(lambda x: fastq_path / f"{x}_{fastq_suffix}2.fastq.gz")
     print(db.shape[0],'samples in total')
     return db
 
