@@ -201,7 +201,7 @@ def check_if_fastq_files_exists(todo_pt, todo_nr):
     return todo_pt, todo_nr
 
 
-def save_recovery_pipeline_input_accessions_files(todo_pt, todo_nr):
+def save_recovery_pipeline_input_accessions_files(DataSource, todo_pt, todo_nr):
     if todo_pt.shape[0]>0:
         #print(todo_pt.shape[0],'paired-end fastq files found')
         print(todo_pt.shape[0],'paired-end or single-end fastq files found')
