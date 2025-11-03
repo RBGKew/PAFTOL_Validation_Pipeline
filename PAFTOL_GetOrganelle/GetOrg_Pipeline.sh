@@ -15,6 +15,27 @@
 ### 1.There is now only one sample list controlling which "pt" and "nr" runs are done - hope that's OK
 ### 2.The <paftol_export_file> is only used by GetOrg_prep.py - but leaving for now
 
+set -e
+
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    echo "Usage: $0 <paftol_export> <DataSource> <fastqFilePath> <adapterFasta>"
+    echo
+    echo "Arguments:"
+    echo "  --skip-prep         Use flag to skip GetOrg_prep.py."
+    echo "  paftol_export:      PAFTOL export with the target samples (used by GetOrg_prep.py)."
+    echo "  DataSource:         PAFTOL, GAP, SRA... (used by GetOrg_prep.py)."
+    echo "  fastqFilePath:      Absolute path to the directory with symlinks to source files."
+    echo "  sampleList:         Use to override sample list files created by GetOrg_prep.py:"
+    echo "                          remaining_pt.txt and remaining_nr.txt."
+    echo "                      Use '' otherwise."
+    echo "                      Cols: idSequence,R1_fastq_file_name,R2_fastq_file_name with no headers."
+    echo "  adapterFasta:       (optional) Use to trim reads with Trimmomatic."
+    echo
+    echo "Used in GetOrg_prep.py:"
+    python GetOrg_prep.py --help
+    exit 0
+fi
+
 paftol_export=$1	# Paul B.: required by GetOrg_prep.py only
 DataSource=$2
 fastqFilePath=$3	# Paul B. added: replaces 'Data' folder in GetOrg_array.sh lines ~37 and ~42
