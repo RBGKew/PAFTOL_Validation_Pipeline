@@ -87,15 +87,44 @@ mkdir -p GetOrg; mkdir -p logs; mkdir -p fasta_pt; mkdir -p fasta_nr; mkdir -p A
 
 
 ## Launch remaining pt
-a=($(wc ../$sampleList)); Ns_pt=${a[0]}; echo $Ns_pt
-if (( $Ns_pt > 0 )); then
+#sampleList="remaining_pt.txt"
+#a=($(wc ../$sampleList)); Ns_pt=${a[0]}; echo $Ns_pt
+#if (( $Ns_pt > 0 )); then
 	### Paul B changed: sbatch --array=1-${Ns_pt}%$slurmThrottle ../GetOrg_array.sh remaining_pt.txt "pt"
-	sbatch --array=1-${Ns_pt}%$slurmThrottle ../GetOrg_array.sh ../${sampleList} "pt" $fastqFilePath $adapterFasta
-fi
+	#sbatch --array=1-${Ns_pt}%$slurmThrottle ../GetOrg_array.sh ../${sampleList} "pt" $fastqFilePath $adapterFasta
+#fi
 
 ## Launch remaining nr
-a=($(wc ../$sampleList)); Ns_nr=${a[0]}; echo $Ns_nr
-if (( $Ns_nr > 0 )); then
+#a=($(wc ../$sampleList)); Ns_nr=${a[0]}; echo $Ns_nr
+#if (( $Ns_nr > 0 )); then
 	### Paul B changed: sbatch --array=1-${Ns_nr}%$slurmThrottle ../GetOrg_array.sh remaining_nr.txt "nr"
-	sbatch --array=1-${Ns_nr}%$slurmThrottle ../GetOrg_array.sh ../${sampleList} "nr" $fastqFilePath $adapterFasta
+	#sbatch --array=1-${Ns_nr}%$slurmThrottle ../GetOrg_array.sh ../${sampleList} "nr" $fastqFilePath $adapterFasta
+#fi
+
+
+if [ ! -s "$sampleList" ]; then
+    echo "Using GetOrg_prep.py output (remaining_<pt/nr>.txt) as sample list."
+    use_prep_output=1
+    fastqFilePath="" # it is already in remaining_<pt/nr>.txt
+else
+    use_prep_output=0
 fi
+organelles=("pt" "nr")
+for org in "${organelles[@]}"; do
+    if [ "$use_prep_output" = 1 ]; then
+       sampleList="remaining_$org.txt" # assign the output from GetOrg_prep.py if not list given
+    fi
+
+    if [ ! -s "$sampleList" ]; then
+        echo "[ERROR] $sampleList missing or empty."
+        exit 1
+    fi
+
+    num_samples=$(wc -l < "$sampleList")
+    echo "$num_samples samples in $sampleList"
+
+    if (( num_samples > 0 )); then
+        sbatch --array=1-${num_samples}%${slurmThrottle:-1} \
+            ../GetOrg_array.sh "$sampleList" "$org" "$fastqFilePath" "$adapterFasta"
+    fi
+done
