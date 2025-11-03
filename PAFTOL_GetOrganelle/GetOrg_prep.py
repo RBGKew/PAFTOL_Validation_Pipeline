@@ -97,24 +97,45 @@ def flag_existing_recoveries(db, DataSource):
 
 
 def add_past_recoveries_metadata_from_logs(db, DataSource):
-    db['log_pt']=False; db['log_nr']=False;
-    logs_df = pd.DataFrame(os.listdir(DataSource + '/logs/'),columns=['file'])
-    if logs_df.shape[0]>0:
-        logs_df['Sample_Name'] = logs_df.file.str.split('log_',expand=True)[1]
-        logs_df['Type'] = logs_df.Sample_Name.str.split('.',expand=True)[1]
-        logs_df['Sample_Name'] = logs_df.Sample_Name.str.split('.',expand=True)[0]
-        logs_df['Organelle'] = logs_df.Sample_Name.str.split('_').str[-1]
-        logs_df['Sample_Name'] = logs_df.Sample_Name.str.replace('_nr','').str.replace('_pt','')
-        logs_df['filesize']=logs_df.file.apply(lambda x: os.stat(DataSource + '/logs/' + x).st_size)
-        db['log_pt']=db.Sample_Name.isin(logs_df[(logs_df.Type=='log') & (logs_df.Organelle=='pt')]['Sample_Name'])
-        db['log_nr']=db.Sample_Name.isin(logs_df[(logs_df.Type=='log') & (logs_df.Organelle=='nr')]['Sample_Name'])
-    print(db.log_pt.sum(),'/',db.shape[0],'pt processed')
-    print(db.log_nr.sum(),'/',db.shape[0],'nr processed')
-    if logs_df.shape[0]>0:
-        db['error_pt']=pd.merge(db, logs_df[(logs_df.Type=='err') & (logs_df.Organelle=='pt')]).filesize > 0
-        db['error_nr']=pd.merge(db, logs_df[(logs_df.Type=='err') & (logs_df.Organelle=='nr')]).filesize > 0
-        print(db.error_pt.sum(),'/',db.shape[0],'error during pt recovery')
-        print(db.error_nr.sum(),'/',db.shape[0],'error during nr recovery')
+    db = db.copy()
+    db['log_pt'] = False
+    db['log_nr'] = False
+    db['error_pt'] = False
+    db['error_nr'] = False
+
+    log_path = os.path.join(DataSource, 'logs')
+    os.makedirs(log_path, exist_ok=True)
+    logs_df = pd.DataFrame(os.listdir(log_path), columns=['file'])
+
+    if not logs_df.empty:
+        # Add metadata to log file names
+        logs_df['Sample_Name'] = logs_df['file'].str.split('log_', expand=True)[1]
+        logs_df['Type'] = logs_df['Sample_Name'].str.split('.', expand=True)[1]
+        logs_df['Sample_Name'] = logs_df['Sample_Name'].str.split('.', expand=True)[0]
+        logs_df['Organelle'] = logs_df['Sample_Name'].str.split('_').str[-1]
+        logs_df['Sample_Name'] = logs_df['Sample_Name'].str.replace('_nr','').str.replace('_pt','')
+        logs_df['filesize'] = logs_df['file'].apply(lambda x: os.stat(os.path.join(log_path, x)).st_size)
+
+        # Add True if log file exists
+        db['log_pt'] = db['Sample_Name'].isin(
+            logs_df.query("Type == 'log' and Organelle == 'pt'")['Sample_Name']
+        )
+        db['log_nr'] = db['Sample_Name'].isin(
+            logs_df.query("Type == 'log' and Organelle == 'nr'")['Sample_Name']
+        )
+
+        # Add True if if log contains error
+        err_pt = logs_df.query("Type == 'err' and Organelle == 'pt' and filesize > 0")
+        err_nr = logs_df.query("Type == 'err' and Organelle == 'nr' and filesize > 0")
+        db['error_pt'] = db['Sample_Name'].isin(err_pt['Sample_Name'])
+        db['error_nr'] = db['Sample_Name'].isin(err_nr['Sample_Name'])
+
+    # Show number of log files found
+    print(db['log_pt'].sum(), '/', len(db), 'pt processed')
+    print(db['log_nr'].sum(), '/', len(db), 'nr processed')
+    # Show number of log files with error
+    print(db['error_pt'].sum(), '/', len(db), 'error during pt recovery')
+    print(db['error_nr'].sum(), '/', len(db), 'error during nr recovery')
     return db
 
 
