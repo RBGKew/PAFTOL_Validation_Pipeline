@@ -89,6 +89,8 @@ if [ -s "$fastqFilePath/$file_path_R2" ]; then
 		fi
 		echo $unmappedFastqFiles
 	else
+        echo "[INFO] Trimmomatic not used to trim reads."
+        echo "[INFO] Adaptors fasta not provided or path not valid (provided: $adapterFasta)."
 		read1File=$fastqFilePath/$file_path_R1
 		read2File=$fastqFilePath/$file_path_R2
 	fi
