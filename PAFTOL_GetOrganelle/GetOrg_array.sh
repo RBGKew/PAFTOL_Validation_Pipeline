@@ -174,6 +174,3 @@ else
 fi
 
 python ../GetOrg_Clean.py --path GetOrg/"$sample"_"$org"/
-
-
-
