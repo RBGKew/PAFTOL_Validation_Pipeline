@@ -65,22 +65,34 @@ def add_fastq_files_paths(db, DataSource, src_path):
     print(db.shape[0],'samples in total')
     return db
 
-
 def flag_existing_recoveries(db, DataSource):
     """
-    List fasta_pt and fasta_nr
+    Searches fasta files in fasta_pt and fasta_nr directories, if exist.
+    Adds two boolean columns:
+        - fasta_pt: True if there is a file <Sample_Name>_pt.fasta
+        - fasta_nr: True if there is a file <Sample_Name>_nr.fasta
     """
-    db['fasta_pt']=False; db['fasta_nr']=False;
-    fasta_pt = pd.DataFrame(os.listdir(DataSource + '/fasta_pt/'),columns=['file'])
-    if fasta_pt.shape[0]>0:
-        fasta_pt['Sample_Name'] = fasta_pt.file.str.split('_pt',expand=True)[0]
-        db['fasta_pt']=db.Sample_Name.isin(fasta_pt.Sample_Name)
-    fasta_nr = pd.DataFrame(os.listdir(DataSource + '/fasta_nr/'),columns=['file'])
-    if fasta_nr.shape[0]>0:
-        fasta_nr['Sample_Name'] = fasta_nr.file.str.split('_nr',expand=True)[0]
-        db['fasta_nr']=db.Sample_Name.isin(fasta_nr.Sample_Name)
-    print(db.fasta_pt.sum(),'/',db.shape[0],'pt recovered')
-    print(db.fasta_nr.sum(),'/',db.shape[0],'nr recovered')
+    def mark_recovered(table, suffix):
+        fasta_dir = f"fasta_{suffix}"
+        path = os.path.join(DataSource, fasta_dir)
+        if not os.path.isdir(path):
+            table[f"{fasta_dir}"] = False
+            print(f"{fasta_dir} directory does not exist.")
+            return table
+        files = [f for f in os.listdir(path) if f.endswith('.fasta')]
+        if not files:
+            table[f"{fasta_dir}"] = False
+            print(f"No fasta files found in {fasta_dir}.")
+            return table
+        recovered = pd.Series(files).str.split(f"_{suffix}", expand=True)[0].unique()
+        table[f"fasta_{suffix}"] = table["Sample_Name"].isin(recovered)
+        print(f"{table[f'fasta_{suffix}'].sum()}/{len(table)} {suffix} recovered")
+        return table
+
+    db['fasta_pt'] = False
+    db['fasta_nr'] = False
+    db = mark_recovered(db, "pt")
+    db = mark_recovered(db, "nr")
     return db
 
 
