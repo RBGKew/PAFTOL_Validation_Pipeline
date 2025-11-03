@@ -16,6 +16,7 @@ ncpu=4
 sample_file=$1
 org=$2
 fastqFilePath=$3 	# Paul B. added: full path to files, replaces the 'Data' location
+                    # BG: leave empty if full path already provided in the sample file.
 adapterFasta=$4 	# Paul B. added: for adding the adaptor file, as required (might not be supplied)	
 
 iline=$(sed -n "$SLURM_ARRAY_TASK_ID"p $sample_file)
