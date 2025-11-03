@@ -16,7 +16,7 @@ from pathlib import Path
 def main():
     ## Parameters
     parser = argparse.ArgumentParser(
-        description='Blast sample sequences on Barcode database and process the results')
+        description='Prepare sample list for the organelle recovery pipeline.')
     parser.add_argument("--db", type=str, help="latest paftol_export")
     parser.add_argument("--DataSource", type=str, help="DataSource (e.g. PAFTOL, SRA)")
     parser.add_argument("--src_path", type=str, help="Absolute path to the directory with all the symlinks to the source files (e.g. /mnt/projects/...)")
