@@ -155,35 +155,49 @@ def get_input_files_for_missing_recoveries(db, DataSource, rem_search):
 
 
 def check_if_fastq_files_exists(todo_pt, todo_nr):
-    # TODO: use function for each data type instead of repeating code
-    if todo_pt.shape[0]>0:
-        for idx, row in todo_pt.iterrows():
-    #         print(row['R1_path'],end=':'); print(os.path.exists(row['R1_path']))
-            todo_pt.loc[idx,'R1_exist'] = os.path.exists( str(row['R1_path']) )
-            if os.path.exists( str(row['R1_path']) ):
-                todo_pt.loc[idx,'R1_size'] = os.stat( str(row['R1_path']) ).st_size
-    #         print(row['R2_path'],end=':'); print(os.path.exists( str(row['R2_path']) ))
-            todo_pt.loc[idx,'R2_exist'] = os.path.exists( str(row['R2_path']) )
-    # Paul B. added - sort by file size
-    todo_pt = todo_pt.sort_values(by='R1_size')
-    pd.set_option('display.max_rows', len(todo_pt)) # -->  pd.reset_option('display.max_rows')
-    print(todo_pt[['Sample_Name','R1_size']])
-    ### Paul B. - trying to accept single-end data also for SRA samples)
-    # todo_pt = todo_pt[(todo_pt.R1_exist) & (todo_pt.R2_exist)]
-    todo_pt = todo_pt[ ( (todo_pt.R1_exist) & (todo_pt.R2_exist) ) | ( todo_pt.R1_exist & todo_pt.R2_exist.isnull() ) ]
+    """
+    Check existence and size of R1/R2 FASTQ files, and remove empty ones from
+    tables.
+    """
+    def check_fastq_table(df):
+        """
+        Add existence and size columns, filter out missing or empty files.
+        """
+        if df.empty:
+            return df
+        df = df.copy()
+        df['R1_path'] = df['R1_path'].astype(str)
+        df['R2_path'] = df['R2_path'].astype(str)
+        df['R1_exist'] = df['R1_path'].apply(os.path.exists)
+        df['R2_exist'] = df['R2_path'].apply(lambda x: os.path.exists(x) if pd.notna(x) else False)
+        df['R1_size'] = df['R1_path'].apply(lambda x: os.path.getsize(x) if os.path.exists(x) else 0)
+        df['R2_size'] = df['R2_path'].apply(lambda x: os.path.getsize(x) if os.path.exists(x) else 0)
 
-    if todo_nr.shape[0]>0:
-        for idx, row in todo_nr.iterrows():
-    #         print(row['R1_path'],end=':'); print(os.path.exists( str(row['R1_path']) )
-            todo_nr.loc[idx,'R1_exist'] = os.path.exists( str(row['R1_path']) )
-            if os.path.exists( str(row['R1_path']) ):
-                todo_nr.loc[idx,'R1_size'] = os.stat( str(row['R1_path']) ).st_size
-    #         print(row['R2_path'],end=':'); print(os.path.exists( str(row['R2_path']))
-            todo_nr.loc[idx,'R2_exist'] = os.path.exists( str(row['R2_path']) )
-    # Paul B. added - sort by file size
-    todo_nr = todo_nr.sort_values(by='R1_size')
-    #todo_nr = todo_nr[(todo_nr.R1_exist) & (todo_nr.R2_exist)]
-    todo_nr = todo_nr[ ((todo_nr.R1_exist) & (todo_nr.R2_exist)) | (todo_nr.R1_exist & todo_nr.R2_exist.isnull()) ]
+        # Drop rows where R1 is missing or empty
+        df = df[(df['R1_exist']) & (df['R1_size'] > 0)]
+
+        # Keep either paired-end (R1 & R2 exist) or valid single-end (R2 missing)
+        df = df[(df['R2_exist']) | (df['R2_path'].isna())]
+
+        # Identify problematic rows
+        invalid = df[
+            (~df['R1_exist']) | (df['R1_size'] == 0) |
+            ((df['R2_exist']) & (df['R2_size'] == 0))
+        ]
+
+        # Keep only valid entries
+        valid = df[
+            (df['R1_exist']) & (df['R1_size'] > 0)
+        ]
+
+        return invalid, valid.sort_values(by='R1_size', ascending=False).reset_index(drop=True)
+
+    todo_pt_invalid, todo_pt = check_fastq_table(todo_pt)
+    todo_nr_invalid, todo_nr = check_fastq_table(todo_nr)
+
+    todo_pt_invalid.to_csv("todo_pt_invalid.csv", index=False)
+    todo_nr_invalid.to_csv("todo_nr_invalid.csv", index=False)
+    print(f"Saved CSVs with {len(todo_pt_invalid)} invalid fastq metadata.")
     return todo_pt, todo_nr
 
 
