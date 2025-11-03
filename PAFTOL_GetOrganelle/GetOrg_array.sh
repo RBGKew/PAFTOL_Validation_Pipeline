@@ -99,6 +99,7 @@ if [ -s "$fastqFilePath/$file_path_R2" ]; then
 	
 	if [ $org == pt ] 
 	then
+    echo "[INFO] Recovering plastomes..."
 		### Paul B. - added '--overwrite 'otherwise get organelle will not run if folder already exists
 		### Paul B. - replaced Data/ with $fastqFilePath in all 6 places below to make the file location more flexible 
 		### Paul B. changed: get_organelle_from_reads.py --overwrite -1 Data/$file_R1.gz -2 Data/$file_R2.gz -o GetOrg/"$sample"_pt \
@@ -111,6 +112,7 @@ if [ -s "$fastqFilePath/$file_path_R2" ]; then
 	then
 		### Paul B. changed: get_organelle_from_reads.py --overwrite -1 Data/$file_R1.gz -2 Data/$file_R2.gz -o GetOrg/"$sample"_nr \
 		### Paul B. changed: get_organelle_from_reads.py -1 $fastqFilePath/$file_path_R1 -2 $fastqFilePath/$file_path_R2 -o GetOrg/"$sample"_nr \
+    echo "[INFO] Recovering nuclear ribosomes..."
 		get_organelle_from_reads.py -1 $read1File -2 $read2File $unmappedFastqFiles  -o GetOrg/"$sample"_nr \
 		--max-reads 536870912 -R 10 -k 35,85,115 -t $ncpu -F embplant_nr --overwrite --zip-files > \
 		logs/log_${sample}_nr.log 2> logs/log_${sample}_nr.err
@@ -150,6 +152,7 @@ else
 
 	if [ $org == pt ] 
 	then
+    echo "[INFO] Recovering plastomes..."
 		### Paul B. - added '--overwrite 'otherwise get organelle will not run if folder already exists  
 		### Paul B changed: get_organelle_from_reads.py --overwrite -u Data/$file_R1.gz -o GetOrg/"$sample"_pt \
 		### Paul B. changed: get_organelle_from_reads.py -u $fastqFilePath/$file_path_R1 -o GetOrg/"$sample"_pt \
@@ -158,6 +161,7 @@ else
 		logs/log_${sample}_pt.log 2> logs/log_${sample}_pt.err
 	elif [ $org == nr ]
 	then
+    echo "[INFO] Recovering nuclear ribonomes..."
 		### Paul B. changed: get_organelle_from_reads.py --overwrite -u Data/$file_R1.gz -o GetOrg/"$sample"_nr \
 		### Paul B. changed: get_organelle_from_reads.py -u $fastqFilePath/$file_path_R1 -o GetOrg/"$sample"_nr \
 		get_organelle_from_reads.py -u $read1File -o GetOrg/"$sample"_nr \
