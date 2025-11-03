@@ -33,12 +33,26 @@ def main():
     db = db[(db.DataSource==DataSource)]
     print("PAFTOL export loaded.\n")
 
-    db = add_fastq_files_paths(db, DataSource)
+    print("\nAdding fastq paths...")
+    db = add_fastq_files_paths(db, DataSource, src_path)
+    print("Fastq paths added.")
+
+    print("\nFlagging existing recoveries...")
     db = flag_existing_recoveries(db, DataSource)
+    print("Existing recoveries flagged.")
+
+    print(f"\nAdding metadata from recovery {rem_search}...")
     db = add_past_recoveries_metadata_from_logs(db, DataSource)
     todo_pt, todo_nr = get_input_files_for_missing_recoveries(db, DataSource, rem_search)
-    todo_pt, todo_nr = check_if_fastq_files_exists(db, DataSource)
-    save_recovery_pipeline_input_accessions_files(todo_pt, todo_nr)
+    print("Existing recoveries metadata from logs added.")
+
+    print("\nChecking if fastq files exist...")
+    todo_pt, todo_nr = check_if_fastq_files_exists(todo_pt, todo_nr)
+    todo_nr.to_csv("todo_nr.csv", index=False)
+    todo_pt.to_csv("todo_pt.csv", index=False)
+
+    print("\nSaving file..")
+    save_recovery_pipeline_input_accessions_files(DataSource, todo_pt, todo_nr)
     print("Done: prepared input files with accessions for recovery pipeline.")
 
 
