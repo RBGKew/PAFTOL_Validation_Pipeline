@@ -23,12 +23,14 @@ def main():
         description='Blast sample sequences on Barcode database and process the results')
     parser.add_argument("--db", type=str, help="latest paftol_export")
     parser.add_argument("--DataSource", type=str, help="DataSource (e.g. PAFTOL, SRA)")
+    parser.add_argument("--src_path", type=str, help="Absolute path to the directory with all the symlinks to the source files (e.g. /mnt/projects/...)")
     parser.add_argument("--rem_search", type=str, help="List completed samples if fasta or log exist")
     args = parser.parse_args()
 
     export_file = args.db
     DataSource = args.DataSource
     rem_search = args.rem_search
+    src_path = Path(args.src_path)
 
     # Load export for datasource
     db = pd.read_csv(export_file)
