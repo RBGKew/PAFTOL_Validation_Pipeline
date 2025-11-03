@@ -44,7 +44,7 @@ if [ -s "$fastqFilePath/$file_path_R2" ]; then
 	unmappedFastqFiles=''
 	if [[ -s "${adapterFasta}" ]]; then
 		echo "Trimming PE fastq files..."
-		java -jar $TRIMMOMATIC PE \
+		java -jar $TRIMMOMATIC PE -phred33 \
 		-threads $ncpu \
 		-trimlog ${sample}_R1_R2_trimmomatic.log \
 		$fastqFilePath/$file_path_R1 \
