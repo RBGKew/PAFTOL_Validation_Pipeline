@@ -4,7 +4,7 @@
 #SBATCH --export=ALL
 #SBATCH --cpus-per-task=4
 #SBATCH --partition=long,himem	# Paul B. changed from all; NB - himem (gruffalo), hmem (KewHPC)
-#SBATCH --mem=80000
+#SBATCH --mem=32000
 #SBATCH --ntasks=1
 ncpu=4
 
