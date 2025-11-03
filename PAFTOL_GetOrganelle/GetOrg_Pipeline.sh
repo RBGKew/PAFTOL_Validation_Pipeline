@@ -21,7 +21,8 @@ fastqFilePath=$3	# Paul B. added: replaces 'Data' folder in GetOrg_array.sh line
 sampleList=$4		# Paul B. added: for manually creating list of samples to run and their fastq file names
 adapterFasta=$5		# Paul B. added: for adding the adaptor file, as required (might not be supplied)	
 rem_search="fasta" # log or fasta
-slurmThrottle=5
+slurmThrottle=2
+
 
 
 ## Make lists of remaining  samples that have no organelles recovered
