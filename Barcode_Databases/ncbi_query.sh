@@ -7,6 +7,6 @@
 
 my_query=$1
 filename=$2
-
+mkdir -p gb_files
 # Download NCBI data as fasta using a query
 esearch -db nucleotide -query "$my_query" | efetch -format gb > gb_files/$filename.gb
