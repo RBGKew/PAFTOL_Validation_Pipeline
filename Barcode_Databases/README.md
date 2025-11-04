@@ -4,7 +4,30 @@ Barcode databases were built from BOLD and NCBI repositories.
 
 ## BOLD databases
 
-The BOLD Database was downloaded from bold (accessed on 03/08/2021), and sequences for cpDNA rbcL, rbcLa, and matK as well as rDNA ITS2 were extracted using a custom notebook (`Processing_BOLD.ipynb`).
+The BOLD Database was downloaded from bold (accessed on 03/08/2021 for the Tree
+of Life release 3.0 and on 22/10/2025 for release 4.0) and sequences for cpDNA
+rbcL, rbcLa, and matK as well as rDNA ITS2 were extracted using a custom
+notebook (`Processing_BOLD.ipynb`).
+
+### Current release (4.0):
+
+Use `download_bold_v4.py` to programmatically download `bold_data.txt` from the
+new BOLD's API version.
+
+```
+nohup python -u download_bold_v4.py > download_bold_v4.log  &2>1 &
+```
+
+### Past releases:
+
+#### Tree of Life release 3.0:
+
+A dataset of combined data (specimen plus sequences) TSV called
+`bold_data.txt` was downloaded from:
+
+```
+https://v3.boldsystems.org/index.php/Public_SearchTerms?query=Magnoliophyta[tax]
+```
 
 ## NCBI databases
 
