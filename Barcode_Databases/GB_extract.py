@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[52]:
-
 ##################################
 # Author: Kevin Leempoel
 
@@ -16,25 +14,11 @@ import pandas as pd
 import os
 import sys
 
-
-# # Parameters
-
-# In[53]:
-
-
 max_N=0.05
 max_per_sp=2
 
-
-# In[54]:
-
-
 ref = sys.argv[1]
 # ref = 'NCBI_18s'
-
-
-# In[55]:
-
 
 if ref == 'NCBI_18s':
     gb_file = 'NCBI_18s.gb'
@@ -88,16 +72,7 @@ elif ref == 'NCBI_ndhf':
     min_len=1000; max_len=2500
 
 
-# # Main
-
-# In[56]:
-
-
 print(gb_file,gene,acc_type,min_len,max_len)
-
-
-# In[57]:
-
 
 def get_qualifier(feature, attribute):
     try:
@@ -105,20 +80,12 @@ def get_qualifier(feature, attribute):
     except:
         return None 
 
-
-# In[58]:
-
-
 # %%time
 count=0
 for line in open(gb_file): 
     if 'LOCUS' in line:
         count += 1
 print(count)
-
-
-# In[59]:
-
 
 # %%time
 print('reading genbank_file',end='...')
@@ -150,16 +117,10 @@ for record in SeqIO.parse(gb_file, "genbank"):
 print('read',rec_count,'accessions')
 
 
-# In[60]:
-
-
 rec_df = pd.DataFrame(rec_ls)
 print(rec_df.shape[0],'entries for',rec_df.sci_name.nunique(),'species')
 print(rec_df.groupby('type').size().sort_values(ascending=False).to_dict())
 print(rec_df.groupby('gene').size().sort_values(ascending=False).to_dict())
-
-
-# In[61]:
 
 
 scut=min_len;
@@ -168,9 +129,6 @@ print(rec_df[rec_df.Len>scut].Len.quantile([.01,.05,.1,0.5,.9,.95,.99]).to_dict(
 print(rec_df[rec_df.Len>scut].Len.median()+(rec_df[rec_df.Len>scut].Len.std()*2))
 print(rec_df[rec_df.Len>scut].Len.median()-(rec_df[rec_df.Len>scut].Len.std()*2))
 rec_df.Len.hist(bins=100);
-
-
-# In[62]:
 
 
 rec_df['rN'] = rec_df.Nn/rec_df.Len
@@ -188,22 +146,13 @@ rec_df = rec_df[rec_df.Len<=max_len]
 print(rec_df.shape[0])
 
 
-# In[63]:
-
-
 rm_char='[]()×'
 for char in rm_char:
     rec_df['sci_name'] = rec_df['sci_name'].str.replace(char,'')
 
 
-# In[64]:
-
-
 print('sending',rec_df.sci_name.nunique(),'species names to WCVP_taxo')
 rec_df.groupby('sci_name').head(1).sci_name.to_csv(gb_file.replace('.gb','_NCBI.csv'),index=False)
-
-
-# In[65]:
 
 
 print('running wcvp_taxo',end='...')
@@ -218,14 +167,8 @@ rec_df = pd.merge(rec_df.rename(columns={'sci_name':'Ini_sci_name'}),wcvp,how='i
 print(rec_df.shape[0])
 
 
-# In[66]:
-
-
 for char in rm_char:
     rec_df['sci_name'] = rec_df['sci_name'].str.replace(char,'')
-
-
-# In[67]:
 
 
 sp_count = rec_df.groupby('sci_name').size().to_frame()
@@ -237,13 +180,7 @@ rec_df = rec_df.sort_values(['family','genus','sci_name']).reset_index(drop=True
 print('f:',rec_df.family.nunique(),'g:',rec_df.genus.nunique(),'s:',rec_df.sci_name.nunique())
 
 
-# In[68]:
-
-
 # rec_df = rec_df[rec_df['type']=='gene']
-
-
-# In[69]:
 
 
 types = list(rec_df.type.unique())
@@ -260,18 +197,11 @@ rec_df[['Locus','gene','mol_type', 'Len',
           'Ini_sci_name', 'TaxID']].to_csv(gb_file.replace('.gb','_TAXO.csv'),index=False)
 
 
-# In[70]:
-
-
 print(rec_df.Len.quantile([.01,.05,.1,0.5,.9,.95,.99]).to_dict())
 print(rec_df.Len.median()+(rec_df.Len.std()*2))
 print(rec_df.Len.median()-(rec_df.Len.std()*2))
 rec_df.Len.hist(bins=50);
 
 
-# In[71]:
-
-
 rec_rm_df = pd.DataFrame(rec_rm)
 print(rec_rm_df.groupby('type').size().to_dict())
-
