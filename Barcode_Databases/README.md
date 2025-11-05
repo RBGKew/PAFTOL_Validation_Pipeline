@@ -31,7 +31,10 @@ https://v3.boldsystems.org/index.php/Public_SearchTerms?query=Magnoliophyta[tax]
 
 ## NCBI databases
 
-NCBI nucleotide database was queried on 30/07/2021 for the following barcoding loci: cpDNA 23s, cpDNA 16s, rDNA 18s. 16s, trnH-psbA and trnL, and downloaded in GenBank format, with the following queries:
+NCBI nucleotide database was queried on 30/07/2021 for the Tree of Life release
+3.0 and on 20/10/2025 for the release 4.0. The following barcoding loci: cpDNA
+23s, cpDNA 16s, rDNA 18s. 16s, trnH-psbA and trnL, and downloaded in GenBank
+format, with the following queries:
 
 ```shell
 sbatch ncbi_query.sh '"18S ribosomal RNA"[All Fields] OR "rrn18"[All Fields] AND "Spermatophyta"[Organism] AND ("1000"[SLEN] : "300000"[SLEN])' NCBI_18s
