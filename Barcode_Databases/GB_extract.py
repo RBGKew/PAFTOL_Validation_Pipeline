@@ -19,6 +19,8 @@ max_per_sp=2
 
 ref = sys.argv[1]
 # ref = 'NCBI_18s'
+wcvp_taxo_path = sys.argv[2]
+# wcvp_taxo_path = "/mnt/apps/user/.../PAFTOL_Validation_Pipeline/WCVP_Taxo"
 
 if ref == 'NCBI_18s':
     gb_file = 'NCBI_18s.gb'
@@ -162,10 +164,12 @@ print('sending',rec_df.sci_name.nunique(),'species names to WCVP_taxo')
 rec_df.groupby('sci_name').head(1).sci_name.to_csv(gb_file.replace('.gb','_NCBI.csv'),index=False)
 
 
+wcvp_taxo_script_path = os.path.join(wcvp_taxo_path, "wcvp_taxo.py")
+wcvp_taxo_export_path = os.path.join(wcvp_taxo_path, "wcvp_names.csv")
 print('running wcvp_taxo',end='...')
 # print(os.system('python ../../PAFTOL_DB/wcvp_taxo.py ../../PAFTOL_DB/wcvp_v5_jun_2021.txt ' + \
 #           gb_file.replace('.gb','_NCBI.csv') + ' -g -s similarity_genus -d divert_genusOK'))
-print(os.system('python wcvp_taxo.py wcvp_v5_jun_2021.txt ' +           gb_file.replace('.gb','_NCBI.csv') + ' -g -s similarity_genus -d divert_genusOK'))
+print(os.system(f'python {wcvp_taxo_script_path} {wcvp_taxo_export_path} ' +           gb_file.replace('.gb','_NCBI.csv') + ' -g -s similarity_genus -d divert_genusOK'))
 wcvp = pd.read_csv(gb_file.replace('.gb','_NCBI_wcvp.csv'))
 wcvp = wcvp[wcvp.sci_name.notnull()]
 print('found',wcvp.sci_name.nunique(),'species in WCVP')
