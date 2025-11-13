@@ -92,28 +92,35 @@ print('reading genbank_file',end='...')
 rec_ls = []; rec_rm=[]; rec_count=0
 for record in SeqIO.parse(gb_file, "genbank"):
     rec_count += 1
-    if record.features:
-        for feature in record.features:
-            if (feature.type in acc_type):
-                seq_dic={}
-                seq_dic['Locus'] = record.id
-                seq_dic['type'] = feature.type
-                if (feature.type in ['gene','CDS']):
-                    seq_dic['gene'] = get_qualifier(feature, 'gene')
-                elif (feature.type in ['rRNA','tRNA','misc_RNA']):
-                    seq_dic['gene'] = get_qualifier(feature, 'product')
-                if seq_dic['gene'] in gene:
-                    seq_dic['Seq'] = str(feature.location.extract(record).seq)
-                    seq_dic['Len'] = len(seq_dic['Seq'])
-                    seq_dic['Nn'] = seq_dic['Seq'].count('N')
-                    for feature in record.features:
-                        if (feature.type == "source"):
-                            seq_dic['sci_name'] = get_qualifier(feature, 'organism')
-                            seq_dic['mol_type'] = get_qualifier(feature, 'mol_type')
-                            seq_dic['TaxID'] = get_qualifier(feature, 'db_xref').replace('taxon:','')
-                    rec_ls.append(seq_dic)      
-                else:
-                    rec_rm.append(seq_dic)
+    if record.seq is None or not record.seq:
+        print("Warning: undefined sequence for", record.id)
+    else:
+        #print(f"Record: {record.id}")
+        if record.features:
+            for feature in record.features:
+                if (feature.type in acc_type):
+                    seq_dic={}
+                    seq_dic['Locus'] = record.id
+                    seq_dic['type'] = feature.type
+                    if (feature.type in ['gene','CDS']):
+                        seq_dic['gene'] = get_qualifier(feature, 'gene')
+                    elif (feature.type in ['rRNA','tRNA','misc_RNA']):
+                        seq_dic['gene'] = get_qualifier(feature, 'product')
+                    if seq_dic['gene'] in gene:
+                        try:
+                            seq_dic['Seq'] = str(feature.location.extract(record).seq)
+                            seq_dic['Len'] = len(seq_dic['Seq'])
+                            seq_dic['Nn'] = seq_dic['Seq'].count('N')
+                            for feature in record.features:
+                                if (feature.type == "source"):
+                                    seq_dic['sci_name'] = get_qualifier(feature, 'organism')
+                                    seq_dic['mol_type'] = get_qualifier(feature, 'mol_type')
+                                    seq_dic['TaxID'] = get_qualifier(feature, 'db_xref').replace('taxon:','')
+                            rec_ls.append(seq_dic)
+                        except Exception as e:
+                            print(f"Skipping {record.id} ({e})")
+                    else:
+                        rec_rm.append(seq_dic)
 print('read',rec_count,'accessions')
 
 
