@@ -1,11 +1,10 @@
 #!/bin/bash
-#SBATCH --job-name="gb_ext"
-#SBATCH --export=ALL
+#SBATCH --job-name="gb_extract"
+#SBATCH --output=gb_extract_%j.out
 #SBATCH --cpus-per-task=1
 #SBATCH --partition=medium
-#SBATCH --mem=32000
+#SBATCH --mem=8000
 
-source activate py36 
 
 # python GB_extract.py NCBI_18s
 # python GB_extract.py NCBI_26s
