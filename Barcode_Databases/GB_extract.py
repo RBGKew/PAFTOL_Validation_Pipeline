@@ -74,7 +74,7 @@ elif ref == 'NCBI_ndhf':
     min_len=1000; max_len=2500
 
 
-print(gb_file,gene,acc_type,min_len,max_len)
+print(f"File: {gb_file}, gene: {gene}, accession: {acc_type}, min length: {min_len}, max length: {max_len}")
 
 def get_qualifier(feature, attribute):
     try:
@@ -87,7 +87,7 @@ count=0
 for line in open(gb_file): 
     if 'LOCUS' in line:
         count += 1
-print(count)
+print(f"{count} loci.")
 
 # %%time
 print('reading genbank_file',end='...')
