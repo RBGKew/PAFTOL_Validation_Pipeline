@@ -78,7 +78,7 @@ a=($(wc ../$sampleList)); Ns_pt=${a[0]}; echo $Ns_pt
 if (( $Ns_pt > 0 )); then
 	### Paul B changed: sbatch --array=1-${Ns_pt}%$slurmThrottle ../GetOrg_array.sh remaining_pt.txt "pt"
 	jobInfo=`sbatch --array=1-${Ns_pt}%$slurmThrottle ../GetOrg_array.sh ../${sampleList} "pt" $fastqFilePath $adapterFasta `
-	$jobInfo
+	echo jobInfo: $jobInfo
 	jobId=`echo $jobInfo | cut -d ' ' -f 4 `
 fi
 
