@@ -71,23 +71,29 @@ if [ -s "$fastqFilePath/$file_path_R2" ]; then
 		ls -alrt ${sample}_R1_trimmomatic_unpaired.fastq.gz
 		ls -alrt ${sample}_R2_trimmomatic_unpaired.fastq.gz
 
-		# Test that there are still unpaired fastq records present otherwise don;t add to -u option:
-		if [[ -s ${sample}_R1_trimmomatic_unpaired.fastq.gz ]]; then
-			echo "INFO: ${sample}_R1_trimmomatic_unpaired.fastq.gz present"
-			if [[ -s ${sample}_R2_trimmomatic_unpaired.fastq.gz ]]; then
+		# Test that there are still unpaired fastq records present otherwise don't add to -u option:
+		# Empty fastq files zipped will not be zero byte so will unzip first before testing whether or not they are empty.
+		gunzip -c ${sample}_R1_trimmomatic_unpaired.fastq.gz > ${sample}_R1_trimmomatic_unpaired.temp_for_testing.fastq
+		gunzip -c ${sample}_R2_trimmomatic_unpaired.fastq.gz > ${sample}_R2_trimmomatic_unpaired.temp_for_testing.fastq
+
+		if [[ -s ${sample}_R1_trimmomatic_unpaired.temp_for_testing.fastq ]]; then
+			echo "INFO: ${sample}_R1_trimmomatic_unpaired.fastq.gz present and greater than zero byte"
+			if [[ -s ${sample}_R2_trimmomatic_unpaired.temp_for_testing.fastq.gz ]]; then
 				echo "INFO: ${sample}_R2_trimmomatic_unpaired.fastq.gz present"
 				unmappedFastqFiles="-u ${sample}_R1_trimmomatic_unpaired.fastq.gz,${sample}_R2_trimmomatic_unpaired.fastq.gz" # Ok if variable is blank when no trimming is done
 			else
 				unmappedFastqFiles="-u ${sample}_R1_trimmomatic_unpaired.fastq.gz"
 				echo "INFO: There are unpaired reads to use after trimming by Trimmomatic in the R1 but not the R2 fastq file for sample ${sample}"
 			fi
-		elif [[ -s ${sample}_R2_trimmomatic_unpaired.fastq.gz ]]; then
+		elif [[ -s ${sample}_R2_trimmomatic_unpaired.temp_for_testing.fastq ]]; then
 			unmappedFastqFiles="-u ${sample}_R2_trimmomatic_unpaired.fastq.gz"
 				echo "INFO: There are unpaired reads to use after trimming by Trimmomatic in the R2 but not the R1 fastq file for sample ${sample}"
 		else
 			echo "INFO: There are no unpaired reads to use after trimming by Trimmomatic in neither the R1 nor the R2 fastq file for sample ${sample}"
 		fi
 		echo $unmappedFastqFiles
+		rm ${sample}_R1_trimmomatic_unpaired.temp_for_testing.fastq
+		rm ${sample}_R2_trimmomatic_unpaired.temp_for_testing.fastq
 	else
 		read1File=$fastqFilePath/$file_path_R1
 		read2File=$fastqFilePath/$file_path_R2
