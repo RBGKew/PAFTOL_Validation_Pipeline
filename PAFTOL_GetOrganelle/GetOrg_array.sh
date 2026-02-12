@@ -33,7 +33,8 @@ echo "R2 full file path: " $fastqFilePath/$file_path_R2
 
 ### Paul B. changed: if [ ! -z "$file_path_R2" ]; then - changed to -s to test whether R2 file exists, if not data is assumed to be single end.
 ###                  (applies to small amount of SRA data only to date) 
-if [ -s "$fastqFilePath/$file_path_R2" ]; then
+### Paul B. also must check whether the "file" is not just the path which occurs when the sample is single end data with no R2 filename
+if [[ ! -d "$fastqFilePath/$file_path_R2" && -s "$fastqFilePath/$file_path_R2" ]]; then
 	file_R2=`basename "$file_path_R2"`; file_R2=${file_R2/.gz/}
 	echo "Pair-end Mode" # Paul B. added
 	echo $file_R2
