@@ -37,7 +37,7 @@ db_export_file = opts.db;  DataSource = opts.DataSource
 # Load data and keep entries for DataSource
 db = pd.read_csv(db_export_file)
 db.DataSource.replace({'Annotated genome':'AG','Unannotated genome':'UG'},inplace=True)
-db = db[db.DataSource==DataSource].astype({'idSequencing':'int','idPaftol':'int'})
+db = db[db.DataSource==DataSource].astype({'idSequence':'int','idPaftol':'int'})
 print(db.shape[0],DataSource,'samples')
 if db.R1FastqFile.isna().sum()>0:
     print(db.R1FastqFile.isna().sum(),'samples have no R1FastqFile and are removed from further analysis')
@@ -51,9 +51,9 @@ if db.R1FastqFile.isna().sum()>0:
 if DataSource in ['OneKP','SRA','UG','AG']:
     db['Sample'] = db['ExternalSequenceID']
 elif DataSource in ['PAFTOL']:
-    db['Sample'] = db['idSequencing'].astype('str').apply(lambda x: 'PAFTOL_' + x.zfill(6))
+    db['Sample'] = db['idSequence'].astype('str').apply(lambda x: 'PAFTOL_' + x.zfill(6))
 elif DataSource in ['GAP']:
-    db['Sample'] = db['idSequencing'].astype('str').apply(lambda x: 'GAP_' + x.zfill(6))
+    db['Sample'] = db['idSequence'].astype('str').apply(lambda x: 'GAP_' + x.zfill(6))
 else:
     print('could not find Datasource',DataSource)
 
@@ -65,7 +65,7 @@ else:
 print('\nWrite samples table',DataSource + '/' + DataSource + '_samples.csv')
 #samples_df = db[['Sample','idSequencing', 'idPaftol', 'Family', 'Genus', 'Species']]    .rename(columns={'Family':'family','Genus':'genus','Species':'species'})
 # Paul B. - changed 'Species' to 'TaxonName' (I don't think the species column is used anywhere:
-samples_df = db[['Sample','idSequencing', 'idPaftol', 'Family', 'Genus']]    .rename(columns={'Family':'family','Genus':'genus'})
+samples_df = db[['Sample','idSequence', 'idPaftol', 'Family', 'Genus']]    .rename(columns={'Family':'family','Genus':'genus'})
 samples_df.to_csv(DataSource + '/' + DataSource + '_samples.csv',index=False)
 print('First line:\n',samples_df[:1].to_string(index=False))
 
