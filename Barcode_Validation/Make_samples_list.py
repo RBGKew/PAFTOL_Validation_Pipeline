@@ -63,7 +63,9 @@ else:
 
 # Write samples table
 print('\nWrite samples table',DataSource + '/' + DataSource + '_samples.csv')
-samples_df = db[['Sample','idSequencing', 'idPaftol', 'Family', 'Genus', 'Species']]    .rename(columns={'Family':'family','Genus':'genus','Species':'species'})
+#samples_df = db[['Sample','idSequencing', 'idPaftol', 'Family', 'Genus', 'Species']]    .rename(columns={'Family':'family','Genus':'genus','Species':'species'})
+# Paul B. - changed 'Species' to 'TaxonName' (I don't think the species column is used anywhere:
+samples_df = db[['Sample','idSequencing', 'idPaftol', 'Family', 'Genus']]    .rename(columns={'Family':'family','Genus':'genus'})
 samples_df.to_csv(DataSource + '/' + DataSource + '_samples.csv',index=False)
 print('First line:\n',samples_df[:1].to_string(index=False))
 
