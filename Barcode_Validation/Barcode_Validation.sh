@@ -15,7 +15,7 @@
 ### Command ###
 # ./Barcode_Validation.sh 2021-07-27_paftol_export.csv 'OneKP'
 
-source activate py36
+###source activate py36 #Paul B removed - activate env outside
 slurmThrottle=10
 
 ### Inputs:
