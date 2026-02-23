@@ -37,7 +37,9 @@ db_export_file = opts.db;  DataSource = opts.DataSource
 # Load data and keep entries for DataSource
 db = pd.read_csv(db_export_file)
 db.DataSource.replace({'Annotated genome':'AG','Unannotated genome':'UG'},inplace=True)
-db = db[db.DataSource==DataSource].astype({'idSequence':'int','idPaftol':'int'})
+#db = db[db.DataSource==DataSource].astype({'idSequence':'int','idPaftol':'int'})
+#Paul B. - removed idPaftol - I don't think it is required - but could have changed it to idSpecimen
+db = db[db.DataSource==DataSource].astype({'idSequence':'int'})
 print(db.shape[0],DataSource,'samples')
 if db.R1FastqFile.isna().sum()>0:
     print(db.R1FastqFile.isna().sum(),'samples have no R1FastqFile and are removed from further analysis')
@@ -64,8 +66,8 @@ else:
 # Write samples table
 print('\nWrite samples table',DataSource + '/' + DataSource + '_samples.csv')
 #samples_df = db[['Sample','idSequencing', 'idPaftol', 'Family', 'Genus', 'Species']]    .rename(columns={'Family':'family','Genus':'genus','Species':'species'})
-# Paul B. - changed 'Species' to 'TaxonName' (I don't think the species column is used anywhere:
-samples_df = db[['Sample','idSequence', 'idPaftol', 'Family', 'Genus']]    .rename(columns={'Family':'family','Genus':'genus'})
+# Paul B. - changed 'Species' to 'TaxonName' (I don't think the species column is used anywhere; also remnoved idPaftol:
+samples_df = db[['Sample','idSequence', 'Family', 'Genus']]    .rename(columns={'Family':'family','Genus':'genus'})
 samples_df.to_csv(DataSource + '/' + DataSource + '_samples.csv',index=False)
 print('First line:\n',samples_df[:1].to_string(index=False))
 
