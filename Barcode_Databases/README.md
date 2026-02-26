@@ -31,6 +31,8 @@ https://v3.boldsystems.org/index.php/Public_SearchTerms?query=Magnoliophyta[tax]
 
 ## NCBI databases
 
+**Barcode sequences**
+
 NCBI nucleotide database was queried on 30/07/2021 for the Tree of Life release
 3.0 and on 20/10/2025 for the release 4.0. The following barcoding loci: cpDNA
 23s, cpDNA 16s, rDNA 18s. 16s, trnH-psbA and trnL, and downloaded in GenBank
@@ -46,12 +48,15 @@ sbatch ncbi_query.sh '"16S ribosomal RNA"[All Fields] OR "rrn16"[All Fields] AND
 
 Genbank files were processed in a custom script `GB_extract.py`, in which genes or rRNA were extracted. All NCBI references were filtered based on length, with a minimum and maximum length set for each barcode. See the beginning of the script for filter values.
 
-Finally, we added the most recent release of plastid data as a reference database of whole plastomes (https://ftp.ncbi.nlm.nih.gov/refseq/release/plastid/).
-(Check which is the latest version)
+**Whole plastomes**
+
+Finally, we added a reference database of whole plastomes
+(https://ftp.ncbi.nlm.nih.gov/refseq/release/plastid/).  Note that the full
+dataset is split into several datasets. Our data release 3.0 used dataset 1.1
+and release 4.0 used datasets 1.1 to 3.1. 
 
 ```
-wget https://ftp.ncbi.nlm.nih.gov/refseq/release/plastid/plastid.3.1.genomic.fna.gz
-gunzip plastid.3.1.genomic.fna.gz
+wget https://ftp.ncbi.nlm.nih.gov/refseq/release/plastid/plastid.*.genomic.fna.gz
 ```
 
 ## Taxonomy checks against WCVP
