@@ -44,8 +44,9 @@ if [[ ! -d "$fastqFilePath/$file_path_R2" && -s "$fastqFilePath/$file_path_R2" ]
 	read2File=''
 	unmappedFastqFiles=''
 	if [[ -s "${adapterFasta}" ]]; then
-		echo "Trimming PE fastq files..."
-		java -jar $TRIMMOMATIC PE \
+		echo "Trimming PE fastq files with phred33 flag..."
+		# Most fastq data appears to be phred33 - remove -phred33 to use auto detect mode 
+		java -jar $TRIMMOMATIC PE -phred33 \
 		-threads $ncpu \
 		-trimlog ${sample}_R1_R2_trimmomatic.log \
 		$fastqFilePath/$file_path_R1 \
@@ -128,10 +129,10 @@ else
 	echo "Single-end Mode"
 
 	### Paul B. - added command to run read trimming but only if adaptor file is added:
-	echo "Trimming SE fastq file..."
+	echo "Trimming SE fastq file with phred33 flag..."
 	read1File='' # for use in GetOrganelle command
 	if [[ -s "${adapterFasta}" ]]; then
-		java -jar $TRIMMOMATIC SE \
+		java -jar $TRIMMOMATIC SE -phred33 \
 		-threads $ncpu \
 		-trimlog ${sample}_R1_trimmomatic.log \
 		$fastqFilePath/$file_path_R1 \
