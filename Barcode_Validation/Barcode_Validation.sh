@@ -23,10 +23,11 @@ slurmThrottle=10
 paftol_export=$1
 # DataSource: PAFTOL, SRA, GAP, OneKP, AG, UG
 DataSource=$2
-if [[ $DataSource == OneKP || $DataSource == AG || $DataSource == UG ]]
+### Paul B. altered: if [[ $DataSource == OneKP || $DataSource == AG || $DataSource == UG ]]
+if [[ $DataSource == OneKP ]]
 then
-type="contigs"
-elif [[ $DataSource == PAFTOL || $DataSource == SRA || $DataSource == GAP ]]
+type="contigs"  # Paul B - for Release 4.0 this only applies now to OneKP contigs data; "type" is only used in Blast_on_barcodes.sh for picking up the fasta files
+elif [[ $DataSource == PAFTOL || $DataSource == SRA || $DataSource == GAP || $DataSource == genome || $DataSource == 'OneKP_HP' ]]
 then
 type="pt_nr"
 else

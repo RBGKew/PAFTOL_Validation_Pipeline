@@ -22,7 +22,7 @@ Samples_file=Samples_to_barcode.txt
 sample=$(sed -n "$SLURM_ARRAY_TASK_ID"p $Samples_file)
 #sample=$(sed -n 1p $Samples_file)
 
-if [ $type == contigs ] 
+if [ $type == contigs ]
 then
 	fasta_pt_file=in_fasta/"$sample".fasta
 	fasta_nr_file=in_fasta/"$sample".fasta
@@ -36,7 +36,7 @@ echo "sample:$sample,pt_fasta:$fasta_pt_file,nr_fasta:$fasta_nr_file"
 
 sed 1d $barcodes_table | while read iline; do
 	idb="$(cut -d',' -f1 <<<"$iline")"
-	type="$(cut -d',' -f4 <<<"$iline")"
+	type="$(cut -d',' -f4 <<<"$iline")"		# Paul B. - NB - 'type' changes at this point to infer the info from the Barcode_Tests.csv file, pt or nr; above it's used as a guide to the folder structure
 	max_blast="$(cut -d',' -f5 <<<"$iline")"
 	blast_pid="$(cut -d',' -f6 <<<"$iline")"
 	echo "Barcode Test:$idb,type:$type,blast_max_matches:$max_blast,blast_min_pid:$blast_pid"
