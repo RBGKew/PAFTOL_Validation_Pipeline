@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[52]:
-
 ##################################
 # Author: Kevin Leempoel
 
@@ -16,25 +14,13 @@ import pandas as pd
 import os
 import sys
 
-
-# # Parameters
-
-# In[53]:
-
-
 max_N=0.05
 max_per_sp=2
 
-
-# In[54]:
-
-
 ref = sys.argv[1]
 # ref = 'NCBI_18s'
-
-
-# In[55]:
-
+wcvp_taxo_path = sys.argv[2]
+# wcvp_taxo_path = "/mnt/apps/user/.../PAFTOL_Validation_Pipeline/WCVP_Taxo"
 
 if ref == 'NCBI_18s':
     gb_file = 'NCBI_18s.gb'
@@ -88,16 +74,7 @@ elif ref == 'NCBI_ndhf':
     min_len=1000; max_len=2500
 
 
-# # Main
-
-# In[56]:
-
-
-print(gb_file,gene,acc_type,min_len,max_len)
-
-
-# In[57]:
-
+print(f"File: {gb_file}, gene: {gene}, accession: {acc_type}, min length: {min_len}, max length: {max_len}")
 
 def get_qualifier(feature, attribute):
     try:
@@ -105,52 +82,48 @@ def get_qualifier(feature, attribute):
     except:
         return None 
 
-
-# In[58]:
-
-
 # %%time
 count=0
 for line in open(gb_file): 
     if 'LOCUS' in line:
         count += 1
-print(count)
-
-
-# In[59]:
-
+print(f"{count} loci.")
 
 # %%time
 print('reading genbank_file',end='...')
 rec_ls = []; rec_rm=[]; rec_count=0
 for record in SeqIO.parse(gb_file, "genbank"):
     rec_count += 1
-    if record.features:
-        for feature in record.features:
-            if (feature.type in acc_type):
-                seq_dic={}
-                seq_dic['Locus'] = record.id
-                seq_dic['type'] = feature.type
-                if (feature.type in ['gene','CDS']):
-                    seq_dic['gene'] = get_qualifier(feature, 'gene')
-                elif (feature.type in ['rRNA','tRNA','misc_RNA']):
-                    seq_dic['gene'] = get_qualifier(feature, 'product')
-                if seq_dic['gene'] in gene:
-                    seq_dic['Seq'] = str(feature.location.extract(record).seq)
-                    seq_dic['Len'] = len(seq_dic['Seq'])
-                    seq_dic['Nn'] = seq_dic['Seq'].count('N')
-                    for feature in record.features:
-                        if (feature.type == "source"):
-                            seq_dic['sci_name'] = get_qualifier(feature, 'organism')
-                            seq_dic['mol_type'] = get_qualifier(feature, 'mol_type')
-                            seq_dic['TaxID'] = get_qualifier(feature, 'db_xref').replace('taxon:','')
-                    rec_ls.append(seq_dic)      
-                else:
-                    rec_rm.append(seq_dic)
+    if record.seq is None or not record.seq:
+        print("Warning: undefined sequence for", record.id)
+    else:
+        #print(f"Record: {record.id}")
+        if record.features:
+            for feature in record.features:
+                if (feature.type in acc_type):
+                    seq_dic={}
+                    seq_dic['Locus'] = record.id
+                    seq_dic['type'] = feature.type
+                    if (feature.type in ['gene','CDS']):
+                        seq_dic['gene'] = get_qualifier(feature, 'gene')
+                    elif (feature.type in ['rRNA','tRNA','misc_RNA']):
+                        seq_dic['gene'] = get_qualifier(feature, 'product')
+                    if seq_dic['gene'] in gene:
+                        try:
+                            seq_dic['Seq'] = str(feature.location.extract(record).seq)
+                            seq_dic['Len'] = len(seq_dic['Seq'])
+                            seq_dic['Nn'] = seq_dic['Seq'].count('N')
+                            for feature in record.features:
+                                if (feature.type == "source"):
+                                    seq_dic['sci_name'] = get_qualifier(feature, 'organism')
+                                    seq_dic['mol_type'] = get_qualifier(feature, 'mol_type')
+                                    seq_dic['TaxID'] = get_qualifier(feature, 'db_xref').replace('taxon:','')
+                            rec_ls.append(seq_dic)
+                        except Exception as e:
+                            print(f"Skipping {record.id} ({e})")
+                    else:
+                        rec_rm.append(seq_dic)
 print('read',rec_count,'accessions')
-
-
-# In[60]:
 
 
 rec_df = pd.DataFrame(rec_ls)
@@ -159,18 +132,12 @@ print(rec_df.groupby('type').size().sort_values(ascending=False).to_dict())
 print(rec_df.groupby('gene').size().sort_values(ascending=False).to_dict())
 
 
-# In[61]:
-
-
 scut=min_len;
 print(rec_df.Len.quantile([.01,.05,.1,0.5,.9,.95,.99]).to_dict())
 print(rec_df[rec_df.Len>scut].Len.quantile([.01,.05,.1,0.5,.9,.95,.99]).to_dict())
 print(rec_df[rec_df.Len>scut].Len.median()+(rec_df[rec_df.Len>scut].Len.std()*2))
 print(rec_df[rec_df.Len>scut].Len.median()-(rec_df[rec_df.Len>scut].Len.std()*2))
 rec_df.Len.hist(bins=100);
-
-
-# In[62]:
 
 
 rec_df['rN'] = rec_df.Nn/rec_df.Len
@@ -188,28 +155,21 @@ rec_df = rec_df[rec_df.Len<=max_len]
 print(rec_df.shape[0])
 
 
-# In[63]:
-
-
 rm_char='[]()×'
 for char in rm_char:
     rec_df['sci_name'] = rec_df['sci_name'].str.replace(char,'')
-
-
-# In[64]:
 
 
 print('sending',rec_df.sci_name.nunique(),'species names to WCVP_taxo')
 rec_df.groupby('sci_name').head(1).sci_name.to_csv(gb_file.replace('.gb','_NCBI.csv'),index=False)
 
 
-# In[65]:
-
-
+wcvp_taxo_script_path = os.path.join(wcvp_taxo_path, "wcvp_taxo.py")
+wcvp_taxo_export_path = os.path.join(wcvp_taxo_path, "wcvp_names.csv")
 print('running wcvp_taxo',end='...')
 # print(os.system('python ../../PAFTOL_DB/wcvp_taxo.py ../../PAFTOL_DB/wcvp_v5_jun_2021.txt ' + \
 #           gb_file.replace('.gb','_NCBI.csv') + ' -g -s similarity_genus -d divert_genusOK'))
-print(os.system('python wcvp_taxo.py wcvp_v5_jun_2021.txt ' +           gb_file.replace('.gb','_NCBI.csv') + ' -g -s similarity_genus -d divert_genusOK'))
+print(os.system(f'python {wcvp_taxo_script_path} {wcvp_taxo_export_path} ' +           gb_file.replace('.gb','_NCBI.csv') + ' -g -s similarity_genus -d divert_genusOK'))
 wcvp = pd.read_csv(gb_file.replace('.gb','_NCBI_wcvp.csv'))
 wcvp = wcvp[wcvp.sci_name.notnull()]
 print('found',wcvp.sci_name.nunique(),'species in WCVP')
@@ -218,14 +178,8 @@ rec_df = pd.merge(rec_df.rename(columns={'sci_name':'Ini_sci_name'}),wcvp,how='i
 print(rec_df.shape[0])
 
 
-# In[66]:
-
-
 for char in rm_char:
     rec_df['sci_name'] = rec_df['sci_name'].str.replace(char,'')
-
-
-# In[67]:
 
 
 sp_count = rec_df.groupby('sci_name').size().to_frame()
@@ -237,13 +191,7 @@ rec_df = rec_df.sort_values(['family','genus','sci_name']).reset_index(drop=True
 print('f:',rec_df.family.nunique(),'g:',rec_df.genus.nunique(),'s:',rec_df.sci_name.nunique())
 
 
-# In[68]:
-
-
 # rec_df = rec_df[rec_df['type']=='gene']
-
-
-# In[69]:
 
 
 types = list(rec_df.type.unique())
@@ -260,18 +208,11 @@ rec_df[['Locus','gene','mol_type', 'Len',
           'Ini_sci_name', 'TaxID']].to_csv(gb_file.replace('.gb','_TAXO.csv'),index=False)
 
 
-# In[70]:
-
-
 print(rec_df.Len.quantile([.01,.05,.1,0.5,.9,.95,.99]).to_dict())
 print(rec_df.Len.median()+(rec_df.Len.std()*2))
 print(rec_df.Len.median()-(rec_df.Len.std()*2))
 rec_df.Len.hist(bins=50);
 
 
-# In[71]:
-
-
 rec_rm_df = pd.DataFrame(rec_rm)
 print(rec_rm_df.groupby('type').size().to_dict())
-
