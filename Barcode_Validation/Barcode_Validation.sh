@@ -38,7 +38,8 @@ fi
 # Paul B. - added to clause to rename OneKP data source back from OneKP_HP (HybPiper recovery with reads)
 # to OneKP once OneKP_HP has directed down the pt_nr route above
 if [[ $DataSource == 'OneKP_HP' ]]; then
-   DataSource = 'OneKP'
+   DataSource=OneKP
+   echo "OneKP data source name changed to: $DataSource"
 fi
 
 ### Directories
