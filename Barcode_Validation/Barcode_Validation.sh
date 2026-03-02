@@ -35,6 +35,12 @@ else
   exit 0
 fi
 
+# Paul B. - added to clause to rename OneKP data source back from OneKP_HP (HybPiper recovery with reads)
+# to OneKP once OneKP_HP has directed down the pt_nr route above
+if [[ $DataSource == 'OneKP_HP' ]]; then
+   DataSource = 'OneKP'
+fi
+
 ### Directories
 # All Datasource directories are expected to be in the same working directory as paftol_export and should look like OneKP/in_fasta, OneKP/blast, PAFTOL/fasta_pt, PAFTOL/fasta_nr etc.
 mkdir -p $DataSource/out_blast

@@ -41,18 +41,19 @@ sed 1d $barcodes_table | while read iline; do
 	blast_pid="$(cut -d',' -f6 <<<"$iline")"
 	echo "Barcode Test:$idb,type:$type,blast_max_matches:$max_blast,blast_min_pid:$blast_pid"
 	
-	if [ $type == nr ] && [ -f $fasta_nr_file ]; then
+	if [ $type == nr ] && [ -s $fasta_nr_file ]; then
 		blastn  -query $fasta_nr_file -db ../Barcode_DB/"$idb".fasta \
 			-perc_identity $blast_pid -outfmt "6 qseqid sseqid pident length slen qlen mismatch gapopen qstart qend sstart send evalue bitscore" \
 			-num_threads $ncpu -max_target_seqs $max_blast \
 			-out out_blast/"$sample"-"$idb".out
-	elif [ $type == pt ] && [ -f $fasta_pt_file ]; then
+	elif [ $type == pt ] && [ -s $fasta_pt_file ]; then
 		blastn  -query $fasta_pt_file -db ../Barcode_DB/"$idb".fasta \
 			-perc_identity $blast_pid -outfmt "6 qseqid sseqid pident length slen qlen mismatch gapopen qstart qend sstart send evalue bitscore" \
 			-num_threads $ncpu -max_target_seqs $max_blast \
 			-out out_blast/"$sample"-"$idb".out
 	else
-	  echo "ERROR $idb, invalid type or no fasta file"
+	  # Paul B, changed file check above from -f to -s to also detect and reject if file is zero byte
+	  echo "ERROR $idb, invalid type or no fasta file or empty fasta file"
 	fi
 done
 
