@@ -41,6 +41,12 @@ if [[ $DataSource == 'OneKP_HP' ]]; then
    DataSource=OneKP
    echo "OneKP data source name changed to: $DataSource"
 fi
+# A similar case us Bukit Timah data source in PAFTOL db as 'Data provider'
+# Start under 'genome_Timah' --> then here switch to 'Data_provider'
+if [[ $DataSource == 'genome_Timah' ]]; then
+   DataSource='Data_provider'
+   echo "genome_Timah data source name changed to: $DataSource"
+fi
 
 ### Directories
 # All Datasource directories are expected to be in the same working directory as paftol_export and should look like OneKP/in_fasta, OneKP/blast, PAFTOL/fasta_pt, PAFTOL/fasta_nr etc.
