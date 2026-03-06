@@ -39,7 +39,7 @@ db = pd.read_csv(db_export_file)
 # Paul B changed: db.DataSource.replace({'Annotated genome':'AG','Unannotated genome':'UG'},inplace=True)
 # NB - Paul B - for Release 4.0 doing AG and UG barcoding together; 'Data provider' can be done under PAFTOL data source
 #               Also 'Assembled_transcriptome' could be done in the same way here.               # |-PUT back to PAFTOL
-db.DataSource.replace({'Annotated genome':'genome','Unannotated genome':'genome','Data provider':'genome', 'Assembled transcriptome':'genome' },inplace=True)
+db.DataSource.replace({'Annotated genome':'genome','Unannotated genome':'genome','Data provider':'PAFTOL', 'Assembled transcriptome':'genome' },inplace=True)
 #db = db[db.DataSource==DataSource].astype({'idSequence':'int','idPaftol':'int'})
 #Paul B. - removed idPaftol - I don't think it is required - but could have changed it to idSpecimen
 db = db[db.DataSource==DataSource].astype({'idSequence':'int'})
