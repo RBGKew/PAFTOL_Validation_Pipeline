@@ -27,7 +27,7 @@ DataSource=$2
 if [[ $DataSource == OneKP ]]
 then
 type="contigs"  # Paul B - for Release 4.0 this only applies now to OneKP contigs data; "type" is only used in Blast_on_barcodes.sh for picking up the fasta files
-elif [[ $DataSource == PAFTOL || $DataSource == SRA || $DataSource == GAP || $DataSource == genome || $DataSource == 'OneKP_HP' $DataSource == 'genome_Timah' ]]
+elif [[ $DataSource == PAFTOL || $DataSource == SRA || $DataSource == GAP || $DataSource == genome || $DataSource == 'OneKP_HP' || $DataSource == 'genome_Timah' ]]
 then
 type="pt_nr"
 else
