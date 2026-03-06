@@ -44,7 +44,7 @@ fi
 # A similar case us Bukit Timah data source in PAFTOL db as 'Data provider'
 # Start under 'genome_Timah' --> then here switch to 'Data_provider'
 if [[ $DataSource == 'genome_Timah' ]]; then
-   DataSource='Data_provider'
+   DataSource='PAFTOL'
    echo "genome_Timah data source name changed to: $DataSource"
 fi
 
